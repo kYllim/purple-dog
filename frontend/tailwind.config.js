@@ -11,6 +11,10 @@ export default {
         background: "#F1F5F9",
         accent: "#C5A059",
       },
+      fontFamily: {
+        serif: ['"Marcellus SC"', 'serif'],
+        sans: ['"Montserrat"', 'sans-serif'],
+      },
     },
   },
   plugins: [],
