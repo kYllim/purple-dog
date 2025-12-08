@@ -2,12 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 
+const authRoutes = require('./routes/authRoutes');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Routes
+app.use('/auth', authRoutes);
 
 // Database connection
 const pool = new Pool({
