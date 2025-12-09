@@ -1,188 +1,323 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center py-12 px-4 bg-[#F1F5F9] font-sans">
-    <div class="max-w-4xl w-full space-y-8 bg-white p-10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-[#C5A059]/10 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-full h-2 bg-[#C5A059]"></div>
-      <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#C5A059]/5 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-[#C5A059]/5 rounded-full blur-3xl"></div>
-
-      <div class="text-center relative z-10">
-        <h2 class="mt-2 text-4xl font-serif font-bold text-[#0F172A] tracking-widest uppercase">
-          Rejoignez Purple Dog
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 font-sans">
-          La plateforme d'excellence pour la vente d'objets de valeur.
-        </p>
-      </div>
-
-      <div class="flex justify-center mb-8 relative z-10">
-        <div class="relative bg-gray-200/50 backdrop-blur-sm p-1 rounded-full flex w-80 shadow-inner border border-white/40">
-          <div 
-            class="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-            :class="role === 'PARTICULIER' ? 'translate-x-0' : 'translate-x-full'"
-          >
-            <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/80 to-transparent opacity-50"></div>
-          </div>
-          <button @click="role = 'PARTICULIER'" class="relative flex-1 py-2.5 rounded-full text-sm font-medium z-10 font-sans" :class="role === 'PARTICULIER' ? 'text-[#0F172A]' : 'text-gray-500'">Particulier</button>
-          <button @click="role = 'PRO'" class="relative flex-1 py-2.5 rounded-full text-sm font-medium z-10 font-sans" :class="role === 'PRO' ? 'text-[#0F172A]' : 'text-gray-500'">Professionnel</button>
+  <AuthForm
+    :title="`Inscription Particulier - Étape ${currentStep}/4`"
+    :subtitle="stepSubtitles[currentStep - 1]"
+    :submit-text="currentStep === 4 ? 'S\'inscrire' : 'Suivant'"
+    loading-text="Inscription en cours..."
+    :initial-data="initialFormData"
+    max-width="2xl"
+    @submit="handleStepSubmit"
+  >
+    <template #default="{ form, errors }">
+      
+      <!-- Barre de progression -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-2">
+          <span v-for="step in 4" :key="step" class="text-sm font-medium" :class="currentStep >= step ? 'text-purple-600' : 'text-gray-400'">
+            Étape {{ step }}
+          </span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" :style="{ width: `${(currentStep / 4) * 100}%` }"></div>
         </div>
       </div>
 
-      <form class="space-y-6 relative z-10" @submit.prevent="soumettre">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BaseInput v-model="f.prenom" label="Prénom" required :error="e.prenom" placeholder="Erkant" />
-          <BaseInput v-model="f.nom" label="Nom" required :error="e.nom" placeholder="YILDIZ" />
+      <!-- ÉTAPE 1 : Informations personnelles + Photo -->
+      <div v-if="currentStep === 1" class="space-y-6">
+        <BaseFileUpload
+          v-model="form.profile_photo"
+          label="Photo de profil (optionnel)"
+          name="profile_photo"
+          accept="image/*"
+          :maxSizeMB="5"
+        />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BaseInput
+            v-model="form.first_name"
+            label="Prénom"
+            name="first_name"
+            placeholder="Jean"
+            autocomplete="given-name"
+            :required="true"
+            :error="errors.first_name"
+          />
+
+          <BaseInput
+            v-model="form.last_name"
+            label="Nom"
+            name="last_name"
+            placeholder="Dupont"
+            autocomplete="family-name"
+            :required="true"
+            :error="errors.last_name"
+          />
         </div>
 
-        <BaseInput v-model="f.email" type="email" label="Email" required :error="e.email" placeholder="erkant.yildiz@gmail.com" />
-        <BaseInput v-model="f.mdp" type="password" label="Mot de passe" required :error="e.mdp" placeholder="••••••••" />
+        <BaseInput
+          v-model="form.email"
+          label="Email"
+          type="email"
+          name="email"
+          placeholder="jean.dupont@email.com"
+          autocomplete="email"
+          :required="true"
+          :error="errors.email"
+        />
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BaseInput v-model="f.adresse" label="Adresse" class="md:col-span-2" required :error="e.adresse" placeholder="10 Rue de la Paix" />
-          <BaseInput v-model="f.ville" label="Ville" required :error="e.ville" placeholder="Paris" />
-          <BaseInput v-model="f.codePostal" label="Code Postal" required :error="e.codePostal" placeholder="75001" />
-          <BaseInput v-model="f.pays" label="Pays" required :error="e.pays" placeholder="France" />
-        </div>
+        <BaseInput
+          v-model="form.phone"
+          label="Téléphone (optionnel)"
+          type="tel"
+          name="phone"
+          placeholder="+33 6 12 34 56 78"
+          autocomplete="tel"
+          :error="errors.phone"
+        />
+      </div>
 
-        <div v-if="role === 'PARTICULIER'" class="space-y-6">
-          <div class="grid grid-cols-1 gap-6">
-             <BaseInput v-model.number="f.age" type="number" label="Âge" required :error="e.age" placeholder="25" />
-          </div>
-        </div>
+      <!-- ÉTAPE 2 : Adresse complète -->
+      <div v-if="currentStep === 2" class="space-y-6">
+        <BaseInput
+          v-model="form.address_line1"
+          label="Adresse postale"
+          name="address_line1"
+          placeholder="12 rue de la République"
+          autocomplete="address-line1"
+          :required="true"
+          :error="errors.address_line1"
+        />
 
-        <div v-if="role === 'PRO'" class="space-y-6">
-          <div class="border-t border-gray-100 pt-6">
-            <h3 class="text-lg font-serif font-medium text-[#0F172A] mb-4 tracking-wider">Informations Entreprise</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <BaseInput v-model="f.entreprise" label="Nom de l'entreprise" required :error="e.entreprise" placeholder="Purple Dog SAS" />
-              <BaseInput v-model="f.siret" label="Numéro SIRET" required :error="e.siret" placeholder="123 456 789 00012" />
-              <BaseInput v-model="f.kbis" label="URL K-Bis" required :error="e.kbis" placeholder="https://..." />
-              <BaseInput v-model="f.site" label="Site Web" required :error="e.site" placeholder="https://..." />
-              <BaseInput v-model="f.specialites" label="Spécialités" :error="e.specialites" placeholder="Luxe, Art..." class="md:col-span-2" />
-            </div>
-          </div>
-        </div>
+        <BaseInput
+          v-model="form.address_line2"
+          label="Complément d'adresse (optionnel)"
+          name="address_line2"
+          placeholder="Appartement, bâtiment, etc."
+          autocomplete="address-line2"
+          :error="errors.address_line2"
+        />
 
-        <div class="space-y-3 pt-2">
-          <label class="flex items-start gap-3 cursor-pointer group">
-            <input type="checkbox" v-model="f.newsletter" class="mt-1 w-4 h-4 text-[#C5A059] border-gray-300 rounded focus:ring-[#C5A059]">
-             <span class="text-sm text-gray-600">Newsletter</span>
-          </label>
-           <label class="flex items-start gap-3 cursor-pointer group">
-            <input type="checkbox" v-model="f.cgv" required class="mt-1 w-4 h-4 text-[#C5A059] border-gray-300 rounded focus:ring-[#C5A059]">
-             <span class="text-sm text-gray-600">J'accepte les <a href="#" class="text-[#C5A059] underline">CGV</a>.</span>
-          </label>
-           <p v-if="e.cgv" class="text-xs text-red-500 ml-7">{{ e.cgv }}</p>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BaseInput
+            v-model="form.postal_code"
+            label="Code postal"
+            name="postal_code"
+            placeholder="75001"
+            autocomplete="postal-code"
+            :required="true"
+            :error="errors.postal_code"
+          />
 
-        <div class="pt-4">
-          <BaseButton type="submit" class="w-full py-3 text-lg" :disabled="chargement">
-            {{ chargement ? '...' : 'Créer mon compte' }}
-          </BaseButton>
+          <BaseInput
+            v-model="form.city"
+            label="Ville"
+            name="city"
+            placeholder="Paris"
+            autocomplete="address-level2"
+            :required="true"
+            :error="errors.city"
+          />
         </div>
-        
-        <p class="text-center text-sm text-gray-500">
-          Déjà membre ? <router-link to="/login" class="font-medium text-[#C5A059]">Se connecter</router-link>
+      </div>
+
+      <!-- ÉTAPE 3 : Mots de passe -->
+      <div v-if="currentStep === 3" class="space-y-6">
+        <BaseInput
+          v-model="form.password"
+          label="Mot de passe"
+          :type="showPassword ? 'text' : 'password'"
+          name="password"
+          placeholder="••••••••••"
+          hint="Minimum 8 caractères"
+          autocomplete="new-password"
+          :required="true"
+          :error="errors.password"
+          :icon-right="showPassword ? EyeSlashIcon : EyeIcon"
+          @icon-click="showPassword = !showPassword"
+        />
+
+        <BaseInput
+          v-model="form.password_confirmation"
+          label="Confirmer le mot de passe"
+          :type="showPasswordConfirm ? 'text' : 'password'"
+          name="password_confirmation"
+          placeholder="••••••••••"
+          autocomplete="new-password"
+          :required="true"
+          :error="errors.password_confirmation"
+          :icon-right="showPasswordConfirm ? EyeSlashIcon : EyeIcon"
+          @icon-click="showPasswordConfirm = !showPasswordConfirm"
+        />
+      </div>
+
+      <!-- ÉTAPE 4 : Acceptations -->
+      <div v-if="currentStep === 4" class="space-y-6">
+        <BaseCheckbox
+          v-model="form.is_over_18"
+          label="Je certifie avoir plus de 18 ans"
+          name="is_over_18"
+          :required="true"
+          :error="errors.is_over_18"
+        />
+
+        <BaseCheckbox
+          v-model="form.newsletter_subscribed"
+          label="Je souhaite recevoir la newsletter"
+          name="newsletter_subscribed"
+        />
+
+        <BaseCheckbox
+          v-model="form.rgpd_accepted"
+          label="J'accepte la politique de confidentialité et le RGPD"
+          name="rgpd_accepted"
+          :required="true"
+          link="/politique-confidentialite"
+          linkText="Lire la politique"
+          :error="errors.rgpd_accepted"
+        />
+      </div>
+
+      <!-- Bouton Précédent (sauf étape 1) -->
+      <div v-if="currentStep > 1" class="mt-6">
+        <button
+          type="button"
+          @click="previousStep"
+          class="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Précédent
+        </button>
+      </div>
+    </template>
+
+    <!-- Footer -->
+    <template #footer>
+      <div class="text-center">
+        <p class="text-sm text-gray-600">
+          Déjà un compte ?
+          <router-link to="/connexion" class="font-medium text-purple-600 hover:text-purple-500">
+            Se connecter
+          </router-link>
         </p>
-      </form>
-    </div>
-  </div>
+      </div>
+    </template>
+  </AuthForm>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
-import BaseInput from '../components/BaseInput.vue'
-import BaseButton from '../components/BaseButton.vue'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import AuthForm from '@/components/AuthForm.vue';
+import BaseInput from '@/components/BaseInput.vue';
+import BaseCheckbox from '@/components/BaseCheckbox.vue';
+import BaseFileUpload from '@/components/BaseFileUpload.vue';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 
-const router = useRouter()
-const role = ref('PARTICULIER')
-const chargement = ref(false)
-const e = reactive({})
+const router = useRouter();
+const currentStep = ref(1);
+const showPassword = ref(false);
+const showPasswordConfirm = ref(false);
 
-const f = reactive({
-  prenom: '',
-  nom: '',
+const stepSubtitles = [
+  'Vos informations personnelles',
+  'Votre adresse',
+  'Sécurisez votre compte',
+  'Dernières validations'
+];
+
+const initialFormData = {
+  profile_photo: null,
+  first_name: '',
+  last_name: '',
   email: '',
-  mdp: '',
-  adresse: '',
-  ville: '',
-  codePostal: '',
-  pays: '',
-  newsletter: false,
-  cgv: false,
-  age: '',
-  entreprise: '',
-  siret: '',
-  kbis: '',
-  site: '',
-  specialites: ''
-})
+  phone: '',
+  address_line1: '',
+  address_line2: '',
+  postal_code: '',
+  city: '',
+  country: 'France',
+  password: '',
+  password_confirmation: '',
+  is_over_18: false,
+  newsletter_subscribed: false,
+  rgpd_accepted: false
+};
 
-const valider = () => {
-  Object.keys(e).forEach(k => delete e[k])
-  let valid = true
-
-  if (!f.prenom) { e.prenom = 'Requis'; valid = false }
-  if (!f.nom) { e.nom = 'Requis'; valid = false }
-  if (!f.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) { e.email = 'Email invalide'; valid = false }
-  if (!f.mdp || f.mdp.length < 6) { e.mdp = 'Min 6 car.'; valid = false }
-  if (!f.adresse) { e.adresse = 'Requis'; valid = false }
-  if (!f.ville) { e.ville = 'Requis'; valid = false }
-  if (!f.codePostal) { e.codePostal = 'Requis'; valid = false }
-  if (!f.pays) { e.pays = 'Requis'; valid = false }
-  if (!f.cgv) { e.cgv = 'Requis'; valid = false }
-
-  if (role.value === 'PARTICULIER') {
-    if (!f.age || f.age < 18) { e.age = 'Majeur requis'; valid = false }
-  } else {
-    if (!f.entreprise) { e.entreprise = 'Requis'; valid = false }
-    if (!f.siret) { e.siret = 'Requis'; valid = false }
-    if (!f.kbis) { e.kbis = 'Requis'; valid = false }
-    if (!f.site) { e.site = 'Requis'; valid = false }
+const previousStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--;
   }
-  return valid
-}
+};
 
-const soumettre = async () => {
-  if (!valider()) return
-  chargement.value = true
-  
+const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
+  // Validation par étape
+  const stepErrors = {};
+
+  if (currentStep.value === 1) {
+    if (!formData.first_name) stepErrors.first_name = 'Le prénom est obligatoire';
+    if (!formData.last_name) stepErrors.last_name = 'Le nom est obligatoire';
+    if (!formData.email) stepErrors.email = 'L\'email est obligatoire';
+  } else if (currentStep.value === 2) {
+    if (!formData.address_line1) stepErrors.address_line1 = 'L\'adresse est obligatoire';
+    if (!formData.postal_code) stepErrors.postal_code = 'Le code postal est obligatoire';
+    if (!formData.city) stepErrors.city = 'La ville est obligatoire';
+  } else if (currentStep.value === 3) {
+    if (!formData.password) stepErrors.password = 'Le mot de passe est obligatoire';
+    if (formData.password.length < 8) stepErrors.password = 'Minimum 8 caractères';
+    if (formData.password !== formData.password_confirmation) {
+      stepErrors.password_confirmation = 'Les mots de passe ne correspondent pas';
+    }
+  } else if (currentStep.value === 4) {
+    if (!formData.is_over_18) stepErrors.is_over_18 = 'Vous devez avoir plus de 18 ans';
+    if (!formData.rgpd_accepted) stepErrors.rgpd_accepted = 'Vous devez accepter la politique RGPD';
+  }
+
+  // Si erreurs, les afficher
+  if (Object.keys(stepErrors).length > 0) {
+    setErrors(stepErrors);
+    setLoading(false);
+    return;
+  }
+
+  // Si pas la dernière étape, passer à la suivante
+  if (currentStep.value < 4) {
+    currentStep.value++;
+    setLoading(false);
+    return;
+  }
+
+  // Dernière étape : soumettre le formulaire
   try {
-    const url = `http://localhost:3000/auth/register/${role.value === 'PRO' ? 'pro' : 'individual'}`
-    const data = role.value === 'PRO' 
-      ? {
-        email: f.email,
-        password: f.mdp,
-        company_name: f.entreprise,
-        siret: f.siret,
-        kbis_url: f.kbis,
-        site_web: f.site,
-        specialites: f.specialites,
-        address: f.adresse,
-        city: f.ville,
-        zip_code: f.codePostal,
-        country: f.pays
+    const data = new FormData();
+    
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== null && formData[key] !== '') {
+        data.append(key, formData[key]);
       }
-      : {
-        email: f.email,
-        password: f.mdp,
-        first_name: f.prenom,
-        last_name: f.nom,
-        age: f.age,
-        address: f.adresse,
-        city: f.ville,
-        zip_code: f.codePostal,
-        country: f.pays
-      }
+    });
 
-      await axios.post(url, data)
-      router.push('/login')
-  } catch (err) {
-    if (err.response?.data?.error) alert(JSON.stringify(err.response.data.error))
-    else alert('Erreur')
+    // TODO: Remplacer par ton appel API
+    // await api.post('/api/auth/register/particulier', data, {
+    //   headers: { 'Content-Type': 'multipart/form-data' }
+    // });
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    console.log('Register Particulier:', formData);
+    
+    // Redirection
+    // router.push({ name: 'EmailVerification', params: { email: formData.email } });
+    
+  } catch (error) {
+    if (error.response?.data?.errors) {
+      setErrors(error.response.data.errors);
+    } else {
+      alert('Une erreur est survenue lors de l\'inscription');
+    }
   } finally {
-    chargement.value = false
+    setLoading(false);
   }
-}
+};
 </script>
