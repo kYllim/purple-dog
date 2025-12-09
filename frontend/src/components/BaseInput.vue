@@ -59,7 +59,6 @@
 </template>
 
 <script setup>
-<<<<<<<<< Temporary merge branch 1
 import { computed } from 'vue';
 
 const props = defineProps({

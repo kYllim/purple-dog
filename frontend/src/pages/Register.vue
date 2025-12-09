@@ -1,25 +1,10 @@
 <template>
-  <AuthForm
-    :title="`Inscription Particulier - Étape ${currentStep}/4`"
-    :subtitle="stepSubtitles[currentStep - 1]"
-    :submit-text="currentStep === 4 ? 'S\'inscrire' : 'Suivant'"
-    loading-text="Inscription en cours..."
-    :initial-data="initialFormData"
-    max-width="2xl"
-    @submit="handleStepSubmit"
-  >
-    <template #default="{ form, errors }">
-      
-      <!-- Barre de progression -->
-      <div class="mb-8">
-        <div class="flex justify-between items-center mb-2">
-          <span v-for="step in 4" :key="step" class="text-sm font-medium" :class="currentStep >= step ? 'text-purple-600' : 'text-gray-400'">
-            Étape {{ step }}
-          </span>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-2">
-          <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" :style="{ width: `${(currentStep / 4) * 100}%` }"></div>
-        </div>
+  <div class="min-h-screen bg-background flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl">
+      <!-- Logo / Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-serif text-accent mb-2">Purple Dog</h1>
+        <p class="text-sm text-text/60 font-sans">Inscription Particulier</p>
       </div>
 
       <AuthForm

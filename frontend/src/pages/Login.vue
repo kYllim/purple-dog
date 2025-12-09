@@ -1,27 +1,11 @@
 <template>
-
-  <AuthForm
-    title="Connexion"
-    subtitle="Accédez à votre compte Purple Dog"
-    submit-text="Se connecter"
-    loading-text="Connexion..."
-    :initial-data="initialFormData"
-    max-width="md"
-    @submit="handleLogin"
-  >
-    <!-- Contenu du formulaire -->
-    <template #default="{ form, errors }">
-      <!-- Email -->
-      <BaseInput
-        v-model="form.email"
-        label="Email"
-        type="email"
-        name="email"
-        placeholder="votre@email.com"
-        autocomplete="email"
-        :required="true"
-        :error="errors.email"
-      />
+  <div class="min-h-screen bg-background flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+      <!-- Logo / Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-serif text-accent mb-2">Purple Dog</h1>
+        <p class="text-sm text-text/60 font-sans">Espace de connexion</p>
+      </div>
 
       <AuthForm
         title="Connexion"
