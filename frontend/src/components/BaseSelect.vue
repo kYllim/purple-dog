@@ -1,6 +1,6 @@
 <template>
   <div class="relative w-full group">
-    <label v-if="label" :for="uid" class="block text-sm font-medium text-[#0F172A]/70 mb-1 group-focus-within:text-[#C5A059]">
+    <label v-if="label" :for="uid" class="block text-sm font-medium text-text/70 mb-1 font-sans group-focus-within:text-accent">
       {{ label }} <span v-if="requis" class="text-red-400">*</span>
     </label>
     <div class="relative">
@@ -10,15 +10,22 @@
         :required="requis"
         :disabled="desactive"
         @change="$emit('update:modelValue', $event.target.value)"
-        class="w-full px-4 py-2 bg-white text-[#0F172A] border border-gray-200 rounded-lg outline-none transition-all duration-300 appearance-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] font-sans"
-        :class="{'border-red-500': erreur, 'text-gray-400': !modelValue}"
+        class="w-full px-4 py-2 bg-white text-text border rounded-lg outline-none transition-all duration-300 appearance-none font-sans focus:ring-1"
+        :class="{
+          'border-red-500 focus:ring-red-500': erreur,
+          'border-text/20 focus:border-accent focus:ring-accent': !erreur,
+          'text-text/40': !modelValue,
+          'cursor-not-allowed bg-background': desactive
+        }"
       >
-        <option value="" disabled selected>{{ placeholder || 'Selectionner' }}</option>
-        <option v-for="opt in options" :key="opt.val" :value="opt.val" class="text-[#0F172A] py-2">{{ opt.libelle }}</option>
+        <option value="" disabled selected class="text-text/40">{{ placeholder || 'Sélectionner' }}</option>
+        <option v-for="opt in options" :key="opt.val" :value="opt.val" class="text-text py-2">
+          {{ opt.libelle }}
+        </option>
       </select>
-      <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+      <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text/40">▼</div>
     </div>
-    <p v-if="erreur" class="text-xs text-red-500 mt-1 ml-1">{{ erreur }}</p>
+    <p v-if="erreur" class="text-xs text-red-500 mt-1 ml-1 font-sans">{{ erreur }}</p>
   </div>
 </template>
 
@@ -26,7 +33,7 @@
 defineProps({
   modelValue: [String, Number],
   label: String,
-  options: { type: Array, default: () => [] }, // Format attendu: [{ libelle: 'A', val: 'a' }]
+  options: { type: Array, default: () => [] },
   placeholder: String,
   requis: Boolean,
   desactive: Boolean,
