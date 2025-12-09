@@ -3,7 +3,6 @@
     <div class="max-w-7xl mx-auto px-6">
       <div class="grid lg:grid-cols-2 gap-20 items-center">
         
-        <!-- Text Content -->
         <div class="space-y-8">
           <div class="inline-block px-4 py-1 border border-accent/50 rounded-full text-accent text-xs font-bold uppercase tracking-widest">
             À propos
@@ -19,7 +18,6 @@
           </div>
         </div>
 
-        <!-- Key Figures Grid -->
         <div class="grid grid-cols-2 gap-px bg-slate-200 border border-slate-200">
           <div 
             v-for="(stat, index) in stats" 

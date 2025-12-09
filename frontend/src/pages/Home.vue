@@ -1,8 +1,7 @@
 <template>
   <PublicLayout>
     <div class="flex flex-col bg-background text-text">
-      <!-- Hero Section -->
-      <HeroSection 
+      <Background 
         :title="heroData.title"
         :subtitle="heroData.subtitle"
         :background-image="heroData.backgroundImage"
@@ -21,22 +20,19 @@
             Mettre en vente
           </router-link>
         </div>
-      </HeroSection>
+      </Background>
 
-      <!-- Agency History (Moved up for better flow) -->
-      <AgencyHistory 
+      <NotreHistoire 
         :description="historyData.description"
         :stats="historyData.stats"
       />
 
-      <!-- Image Carousel -->
-      <ImageCarousel 
+      <Carousel 
         :title="carouselData.title"
         :images="carouselData.images"
       />
 
-      <!-- Newsletter -->
-      <NewsletterSignup 
+      <Newsletter 
         :title="newsletterData.title" 
         :description="newsletterData.description"
       />
@@ -47,12 +43,11 @@
 <script setup>
 import { ref } from 'vue';
 import PublicLayout from '../layouts/PublicLayout.vue';
-import HeroSection from '../components/home/HeroSection.vue';
-import ImageCarousel from '../components/home/ImageCarousel.vue';
-import AgencyHistory from '../components/home/AgencyHistory.vue';
-import NewsletterSignup from '../components/home/NewsletterSignup.vue';
+import Background from '../components/home/Background.vue';
+import Carousel from '../components/home/Carousel.vue';
+import NotreHistoire from '../components/home/NotreHistoire.vue';
+import Newsletter from '../components/home/Newsletter.vue';
 
-// Import local images
 import imgObjet1 from '/src/assets/img/objet1.jpg';
 import imgObjet2 from '/src/assets/img/objet2.jpg';
 import imgObjet3 from '/src/assets/img/objet3.jpg';
@@ -62,7 +57,7 @@ import imgObjet5 from '/src/assets/img/objet5.jpg';
 const heroData = ref({
   title: 'Objets de collection',
   subtitle: 'L\'excellence et la passion des objets d\'exception',
-  backgroundImage: '/src/assets/img/illustration.jpg' // Using absolute path for public access or handled by Vite
+  backgroundImage: '/src/assets/img/illustration.jpg' 
 });
 
 const carouselData = ref({

@@ -2,9 +2,7 @@
   <div>
     <h2 class="mb-6 text-3xl font-extrabold text-slate-800">Tableau de bord</h2>
 
-    <!-- Stats Cards -->
     <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-      <!-- Card 1 -->
       <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
         <div class="flex items-center">
           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
@@ -19,7 +17,6 @@
         </div>
       </div>
 
-       <!-- Card 2 -->
       <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
         <div class="flex items-center">
           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-accent bg-opacity-20 text-accent">
@@ -34,7 +31,6 @@
         </div>
       </div>
 
-       <!-- Card 3 -->
       <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
         <div class="flex items-center">
           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -49,7 +45,6 @@
         </div>
       </div>
 
-       <!-- Card 4 -->
       <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-100">
         <div class="flex items-center">
           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
@@ -65,7 +60,6 @@
       </div>
     </div>
 
-    <!-- Recent Activity Section -->
     <div class="rounded-xl bg-white shadow-sm border border-slate-100">
         <div class="border-b border-slate-100 px-6 py-4">
             <h3 class="text-lg font-bold text-slate-800">Activité Récente</h3>
@@ -130,7 +124,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-// Component logic here if needed
-</script>
