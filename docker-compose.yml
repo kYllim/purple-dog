@@ -5,8 +5,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    env_file:
-      - ./backend/.env
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:password@postgres:5432/purple_dog

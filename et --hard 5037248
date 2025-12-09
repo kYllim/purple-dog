@@ -1,0 +1,32 @@
+[33m7d34a3c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m remove backend from tracking
+[33mad6cc79[m Remove backend .env from tracking
+[33m14eb321[m[33m ([m[1;32mfeature-backendAuth[m[33m)[m Merge remote-tracking branch 'origin/main' into feature-backendAuth
+[33m5037248[m implémentation envoie de mail
+[33m23ef96e[m modification des components
+[33mda236a7[m Verify email, confirmation email, fixed bakcend with mail, nodemailler install
+[33m1656ffb[m Merge branch 'dev-erkant'
+[33m65c6e72[m Merge branch 'homepage-dev'
+[33mabcc000[m modification du rooter
+[33m7fb99a3[m[33m ([m[1;31morigin/homepage-dev[m[33m)[m Page de homepage + components nav et footer
+[33mf0af9a9[m feat: ajout page profil modifiable et ajustements backend
+[33m808a67e[m Suppression de certains champs, ajout de nouveau champ
+[33m462080d[m Feature: Implémentation CRUD Admin Utilisateurs (Backend)
+[33m43da0ce[m fixed frontend
+[33m583a1c8[m Merge remote-tracking branch 'origin/main'
+[33me84c4c2[m ajout des couleurs et de la police
+[33m88f5c6b[m Merge branch 'main' of https://github.com/kYllim/purple-dog
+[33md090199[m Merge remote-tracking branch 'origin/main'
+[33m04b8dde[m Merge branch 'Feature-ComponentAuthform'
+[33me67bb35[m Merge branch 'admin-dev'
+[33md150adf[m[33m ([m[1;31morigin/admin-dev[m[33m)[m ajout du dashboard admin
+[33m6456d24[m Implémentation des pages Login/Register et mise à jour du AuthController
+[33mee49378[m[33m ([m[1;31morigin/dev-front[m[33m)[m chore: stop tracking frontend node_modules and add .gitignore
+[33m0c3a8ce[m[33m ([m[1;31morigin/dev[m[33m, [m[1;32mFeature-ComponentAuthform[m[33m)[m changement
+[33m5d9f1a3[m[33m ([m[1;32mdev[m[33m)[m ajout des formulaires
+[33md095093[m Init
+[33me296c3e[m Init front
+[33m7890edb[m Initial Frontend Vue + Tailwind
+[33m241ae44[m[33m ([m[1;31morigin/dev-back[m[33m, [m[1;32mdev-back[m[33m)[m Implémentation de l'authentification (Inscription Pro/Particulier + Login)
+[33me67763b[m Initialisation du backend (Node.js + Docker)
+[33mad8cb5d[m Initialisation du back
+[33m7b5287b[m Init Frontend
