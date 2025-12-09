@@ -95,8 +95,10 @@ import AuthForm from '@/components/AuthForm.vue';
 import BaseInput from '@/components/BaseInput.vue';
 import BaseCheckbox from '@/components/BaseCheckbox.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const showPassword = ref(false);
 
 const initialFormData = {
@@ -107,24 +109,30 @@ const initialFormData = {
 
 const handleLogin = async (formData, { setErrors, setLoading }) => {
   try {
-    // TODO: Remplacer par ton appel API
-    // const response = await api.post('/api/auth/login', formData);
+    const response = await authStore.login({
+      email: formData.email,
+      password: formData.password,
+    });
     
-    // Simulation
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Login réussi:', response);
     
-    console.log('Login:', formData);
-    
-    // TODO: Stocker le token et rediriger selon user_type
-    // if (response.data.user.user_type === 'particulier') {
-    //   router.push('/particulier/dashboard');
-    // } else if (response.data.user.user_type === 'professionnel') {
-    //   router.push('/professionnel/dashboard');
-    // }
+    // Rediriger selon le rôle
+    if (response.role === 'PARTICULIER') {
+      router.push('/');
+    } else if (response.role === 'PRO') {
+      router.push('/');
+    } else if (response.role === 'ADMIN') {
+      router.push('/admin');
+    } else {
+      router.push('/');
+    }
     
   } catch (error) {
-    if (error.response?.data?.errors) {
-      setErrors(error.response.data.errors);
+    console.error('Erreur login:', error);
+    if (error.response?.data?.error) {
+      setErrors({
+        email: error.response.data.error
+      });
     } else {
       setErrors({
         email: 'Email ou mot de passe incorrect'

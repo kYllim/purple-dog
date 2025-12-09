@@ -307,8 +307,10 @@ import BaseCheckbox from '@/components/BaseCheckbox.vue';
 import BaseFileUpload from '@/components/BaseFileUpload.vue';
 import BaseMultiSelect from '@/components/BaseMultiSelect.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const currentStep = ref(1);
 const showPassword = ref(false);
 const showPasswordConfirm = ref(false);
@@ -396,6 +398,16 @@ const previousStep = () => {
   }
 };
 
+// Convertir un fichier en base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
   const stepErrors = {};
 
@@ -441,30 +453,43 @@ const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
 
   // Dernière étape : soumettre
   try {
-    const data = new FormData();
-    
-    Object.keys(formData).forEach(key => {
-      if (key === 'social_media') {
-        data.append('social_media', JSON.stringify(formData.social_media));
-      } else if (key === 'specialties' || key === 'sought_objects') {
-        formData[key].forEach((item, index) => {
-          data.append(`${key}[${index}]`, item);
-        });
-      } else if (formData[key] !== null && formData[key] !== '') {
-        data.append(key, formData[key]);
-      }
-    });
+    // Convertir le document officiel en base64 si il existe
+    let documentBase64 = null;
+    if (formData.official_document) {
+      documentBase64 = await fileToBase64(formData.official_document);
+    }
 
-    // TODO: API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const dataToSend = {
+      email: formData.email,
+      password: formData.password,
+      company_name: formData.company_name,
+      siret: formData.siret,
+      official_document: documentBase64, // Sera envoyé comme kbis_url
+      website: formData.website || '',
+      specialties: formData.specialties, // Tableau qui sera converti en string dans authService
+      address_line1: formData.address_line1,
+      postal_code: formData.postal_code,
+      city: formData.city,
+      country: formData.country,
+    };
+
+    const response = await authStore.registerPro(dataToSend);
     
-    console.log('Register Professionnel:', formData);
+    console.log('Inscription Professionnel réussie:', response);
+    
+    // Redirection vers la page d'accueil
+    router.push('/');
     
   } catch (error) {
-    if (error.response?.data?.errors) {
-      setErrors(error.response.data.errors);
+    console.error('Erreur inscription:', error);
+    if (error.response?.data?.error) {
+      if (typeof error.response.data.error === 'string') {
+        setErrors({ email: error.response.data.error });
+      } else {
+        setErrors(error.response.data.error);
+      }
     } else {
-      alert('Une erreur est survenue lors de l\'inscription');
+      setErrors({ email: 'Une erreur est survenue lors de l\'inscription' });
     }
   } finally {
     setLoading(false);

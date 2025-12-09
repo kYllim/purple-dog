@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS UTILISATEURS (
     pays VARCHAR(100),
     email_verifie BOOLEAN DEFAULT FALSE,
     newsletter_acceptee BOOLEAN DEFAULT FALSE,
+    token_verification VARCHAR(255),
+    token_verification_expire TIMESTAMP,
+    token_reset_password VARCHAR(255),
+    token_reset_password_expire TIMESTAMP,
     cree_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     mis_a_jour_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

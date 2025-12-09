@@ -205,8 +205,10 @@ import BaseInput from '@/components/BaseInput.vue';
 import BaseCheckbox from '@/components/BaseCheckbox.vue';
 import BaseFileUpload from '@/components/BaseFileUpload.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
+import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const currentStep = ref(1);
 const showPassword = ref(false);
 const showPasswordConfirm = ref(false);
@@ -240,6 +242,16 @@ const previousStep = () => {
   if (currentStep.value > 1) {
     currentStep.value--;
   }
+};
+
+// Convertir un fichier en base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 };
 
 const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
@@ -281,31 +293,42 @@ const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
 
   // Dernière étape : soumettre le formulaire
   try {
-    const data = new FormData();
-    
-    Object.keys(formData).forEach(key => {
-      if (formData[key] !== null && formData[key] !== '') {
-        data.append(key, formData[key]);
-      }
-    });
+    // Convertir la photo de profil en base64 si elle existe
+    let profilePhotoBase64 = null;
+    if (formData.profile_photo) {
+      profilePhotoBase64 = await fileToBase64(formData.profile_photo);
+    }
 
-    // TODO: Remplacer par ton appel API
-    // await api.post('/api/auth/register/particulier', data, {
-    //   headers: { 'Content-Type': 'multipart/form-data' }
-    // });
+    const dataToSend = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      password: formData.password,
+      age: formData.is_over_18 ? 18 : null, // Valeur par défaut 18 ans si cochée
+      address_line1: formData.address_line1,
+      postal_code: formData.postal_code,
+      city: formData.city,
+      country: formData.country,
+      profile_photo: profilePhotoBase64,
+    };
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const response = await authStore.registerIndividual(dataToSend);
     
-    console.log('Register Particulier:', formData);
+    console.log('Inscription Particulier réussie:', response);
     
-    // Redirection
-    // router.push({ name: 'EmailVerification', params: { email: formData.email } });
+    // Redirection vers la page d'accueil
+    router.push('/');
     
   } catch (error) {
-    if (error.response?.data?.errors) {
-      setErrors(error.response.data.errors);
+    console.error('Erreur inscription:', error);
+    if (error.response?.data?.error) {
+      if (typeof error.response.data.error === 'string') {
+        setErrors({ email: error.response.data.error });
+      } else {
+        setErrors(error.response.data.error);
+      }
     } else {
-      alert('Une erreur est survenue lors de l\'inscription');
+      setErrors({ email: 'Une erreur est survenue lors de l\'inscription' });
     }
   } finally {
     setLoading(false);

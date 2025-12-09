@@ -92,6 +92,7 @@
 import { ref } from 'vue';
 import AuthForm from '@/components/AuthForm.vue';
 import BaseInput from '@/components/BaseInput.vue';
+import authService from '@/services/authService';
 
 const emailSent = ref(false);
 const sentEmail = ref('');
@@ -102,20 +103,17 @@ const initialFormData = {
 
 const handleForgotPassword = async (formData, { setErrors, setLoading }) => {
   try {
-    // TODO: Remplacer par ton appel API
-    // await api.post('/api/auth/forgot-password', formData);
-
-    // Simulation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log('Forgot password for:', formData.email);
+    await authService.forgotPassword(formData.email);
     
     sentEmail.value = formData.email;
     emailSent.value = true;
     
   } catch (error) {
-    if (error.response?.data?.errors) {
-      setErrors(error.response.data.errors);
+    console.error('Erreur forgot password:', error);
+    if (error.response?.data?.error) {
+      setErrors({
+        email: error.response.data.error
+      });
     } else {
       setErrors({
         email: 'Une erreur est survenue. Veuillez réessayer.'

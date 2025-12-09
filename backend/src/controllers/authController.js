@@ -2,9 +2,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const { z } = require('zod');
+const crypto = require('crypto');
+const emailService = require('../services/emailService');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
+
+// Générer un token aléatoire
+const generateToken = () => {
+    return crypto.randomBytes(32).toString('hex');
+};
 
 const schemaPro = z.object({
     email: z.string().email(),
@@ -72,9 +79,28 @@ exports.registerPro = async (req, res) => {
                 [uid, unMois]
             );
 
+            // Générer token de vérification d'email
+            const verificationToken = generateToken();
+            const verificationExpire = new Date();
+            verificationExpire.setHours(verificationExpire.getHours() + 24); // 24h
+
+            await client.query(
+                `UPDATE UTILISATEURS SET token_verification = $1, token_verification_expire = $2 WHERE id = $3`,
+                [verificationToken, verificationExpire, uid]
+            );
+
             await client.query('COMMIT');
+
+            // Envoyer l'email de vérification
+            try {
+                await emailService.sendVerificationEmail(email, verificationToken);
+            } catch (emailError) {
+                console.error('Erreur envoi email:', emailError);
+                // On ne bloque pas l'inscription si l'email échoue
+            }
+
             const token = jwt.sign({ id: uid, role: 'PRO' }, SECRET_KEY, { expiresIn: '24h' });
-            res.status(201).json({ message: 'Compte Pro créé', token, userId: uid });
+            res.status(201).json({ message: 'Compte Pro créé. Vérifiez votre email.', token, userId: uid });
         } catch (e) {
             await client.query('ROLLBACK');
             throw e;
@@ -114,9 +140,28 @@ exports.registerIndividual = async (req, res) => {
                 [uid, first_name, last_name, age]
             );
 
+            // Générer token de vérification d'email
+            const verificationToken = generateToken();
+            const verificationExpire = new Date();
+            verificationExpire.setHours(verificationExpire.getHours() + 24); // 24h
+
+            await client.query(
+                `UPDATE UTILISATEURS SET token_verification = $1, token_verification_expire = $2 WHERE id = $3`,
+                [verificationToken, verificationExpire, uid]
+            );
+
             await client.query('COMMIT');
+
+            // Envoyer l'email de vérification
+            try {
+                await emailService.sendVerificationEmail(email, verificationToken);
+            } catch (emailError) {
+                console.error('Erreur envoi email:', emailError);
+                // On ne bloque pas l'inscription si l'email échoue
+            }
+
             const token = jwt.sign({ id: uid, role: 'PARTICULIER' }, SECRET_KEY, { expiresIn: '24h' });
-            res.status(201).json({ message: 'Compte Particulier créé', token, userId: uid });
+            res.status(201).json({ message: 'Compte Particulier créé. Vérifiez votre email.', token, userId: uid });
         } catch (e) {
             await client.query('ROLLBACK');
             throw e;
@@ -143,9 +188,141 @@ exports.login = async (req, res) => {
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
 
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ message: 'Connexion réussie', token, role: user.role });
+        res.json({ message: 'Connexion réussie', token, role: user.role, emailVerified: user.email_verifie });
     } catch (e) {
         if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors });
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Vérifier l'email avec le token
+exports.verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        if (!token) {
+            return res.status(400).json({ error: 'Token manquant' });
+        }
+
+        const result = await pool.query(
+            'SELECT * FROM UTILISATEURS WHERE token_verification = $1',
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Token invalide' });
+        }
+
+        const user = result.rows[0];
+
+        // Vérifier si le token a expiré
+        if (new Date() > new Date(user.token_verification_expire)) {
+            return res.status(400).json({ error: 'Token expiré' });
+        }
+
+        // Mettre à jour l'utilisateur
+        await pool.query(
+            `UPDATE UTILISATEURS 
+             SET email_verifie = TRUE, token_verification = NULL, token_verification_expire = NULL 
+             WHERE id = $1`,
+            [user.id]
+        );
+
+        res.json({ message: 'Email vérifié avec succès' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Demander la réinitialisation du mot de passe
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email manquant' });
+        }
+
+        const result = await pool.query('SELECT * FROM UTILISATEURS WHERE email = $1', [email]);
+
+        // Toujours retourner un succès pour ne pas révéler si l'email existe
+        if (result.rows.length === 0) {
+            return res.json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
+        }
+
+        const user = result.rows[0];
+
+        // Générer token de réinitialisation
+        const resetToken = generateToken();
+        const resetExpire = new Date();
+        resetExpire.setHours(resetExpire.getHours() + 1); // 1h
+
+        await pool.query(
+            `UPDATE UTILISATEURS 
+             SET token_reset_password = $1, token_reset_password_expire = $2 
+             WHERE id = $3`,
+            [resetToken, resetExpire, user.id]
+        );
+
+        // Envoyer l'email de réinitialisation
+        try {
+            await emailService.sendPasswordResetEmail(email, resetToken);
+        } catch (emailError) {
+            console.error('Erreur envoi email:', emailError);
+            return res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'email' });
+        }
+
+        res.json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Réinitialiser le mot de passe
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token ou mot de passe manquant' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
+        }
+
+        const result = await pool.query(
+            'SELECT * FROM UTILISATEURS WHERE token_reset_password = $1',
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Token invalide' });
+        }
+
+        const user = result.rows[0];
+
+        // Vérifier si le token a expiré
+        if (new Date() > new Date(user.token_reset_password_expire)) {
+            return res.status(400).json({ error: 'Token expiré' });
+        }
+
+        // Hasher le nouveau mot de passe
+        const hash = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe
+        await pool.query(
+            `UPDATE UTILISATEURS 
+             SET mot_de_passe_hash = $1, token_reset_password = NULL, token_reset_password_expire = NULL 
+             WHERE id = $2`,
+            [hash, user.id]
+        );
+
+        res.json({ message: 'Mot de passe réinitialisé avec succès' });
+    } catch (e) {
         console.error(e);
         res.status(500).json({ error: 'Erreur serveur' });
     }
