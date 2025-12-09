@@ -25,7 +25,7 @@
           <img src="https://i.pravatar.cc/40" class="w-10 h-10 rounded-full cursor-pointer border" />
           <div v-if="menuOpen" class="absolute right-0 mt-2 w-48 bg-white shadow rounded">
             <RouterLink to="/dashboard/particulier/profil" class="block px-4 py-2 hover:bg-gray-100">Profil</RouterLink>
-            <RouterLink to="/dashboard/particulier" class="block px-4 py-2 hover:bg-gray-100">Tableau de bord</RouterLink>
+            <RouterLink to="/dashboard/particulier" class="block px-4 py-2 hover:bg-gray-100">Messages</RouterLink>
             <button class="w-full text-left px-4 py-2 hover:bg-gray-100">Se déconnecter</button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import pool from "../db/index.js"; // connexion PostgreSQL
+import pool from "../db/index.js";
 
 export const getCategories = async (req, res) => {
   try {
@@ -22,19 +22,12 @@ export const createObjet = async (req, res) => {
       documents_urls,
       type_vente,
       prix_souhaite,
+      prix_depart,
       prix_achat_immediat
     } = req.body;
 
-    // Validation minimum 10 photos
-    if (!photos_urls || photos_urls.length < 10) {
-      return res.status(400).json({ error: "Minimum 10 photos requises" });
-    }
-
-    // Calcul automatique du prix_depart pour les enchères
-    const prix_depart = type_vente === "ENCHERE" ? prix_souhaite * 0.9 : null;
-
-    const query = `
-      INSERT INTO objets(
+    const result = await pool.query(
+      `INSERT INTO objets(
         vendeur_id,
         categorie_id,
         titre,
@@ -51,24 +44,23 @@ export const createObjet = async (req, res) => {
         cree_le,
         mis_a_jour_le
       ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'BROUILLON', NOW(), NOW())
-      RETURNING *
-    `;
-    const values = [
-      req.user.id, // récupéré depuis middleware auth
-      categorie_id,
-      titre,
-      description,
-      dimensions,
-      poids_kg,
-      photos_urls,
-      documents_urls,
-      type_vente,
-      prix_souhaite,
-      prix_depart,
-      prix_achat_immediat
-    ];
+      RETURNING *`,
+      [
+        1, // pour l'instant on met un id de particulier mocké
+        categorie_id,
+        titre,
+        description,
+        dimensions,
+        poids_kg,
+        photos_urls,
+        documents_urls,
+        type_vente,
+        prix_souhaite,
+        prix_depart,
+        prix_achat_immediat
+      ]
+    );
 
-    const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
 
   } catch (err) {

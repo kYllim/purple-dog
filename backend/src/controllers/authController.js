@@ -3,25 +3,24 @@ const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const { z } = require('zod');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
-const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey'; // Move to env in production
-
-// Validation schemas
-const registerProSchema = z.object({
+const schemaPro = z.object({
     email: z.string().email(),
     password: z.string().min(8),
     company_name: z.string().min(1),
     siret: z.string().min(9),
+    kbis_url: z.string().optional(),
+    site_web: z.string().optional(),
+    specialites: z.string().optional(),
     address: z.string().optional(),
     city: z.string().optional(),
     zip_code: z.string().optional(),
     country: z.string().optional(),
 });
 
-const registerIndividualSchema = z.object({
+const schemaParticulier = z.object({
     email: z.string().email(),
     password: z.string().min(8),
     first_name: z.string().min(1),
@@ -33,145 +32,121 @@ const registerIndividualSchema = z.object({
     country: z.string().optional(),
 });
 
-const loginSchema = z.object({
+const schemaLogin = z.object({
     email: z.string().email(),
     password: z.string(),
 });
 
 exports.registerPro = async (req, res) => {
     try {
-        const data = registerProSchema.parse(req.body);
-        const { email, password, company_name, siret, address, city, zip_code, country } = data;
+        const d = schemaPro.parse(req.body);
+        const { email, password, company_name, siret, kbis_url, site_web, specialites, address, city, zip_code, country } = d;
 
-        // Check if user exists
-        const userResult = await pool.query('SELECT id FROM UTILISATEURS WHERE email = $1', [email]);
-        if (userResult.rows.length > 0) {
-            return res.status(400).json({ error: 'Email already in use' });
-        }
+        const exist = await pool.query('SELECT id FROM UTILISATEURS WHERE email = $1', [email]);
+        if (exist.rows.length > 0) return res.status(400).json({ error: 'Email pris' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
+        const hash = await bcrypt.hash(password, 10);
         const client = await pool.connect();
+
         try {
             await client.query('BEGIN');
-
-            // Create User
-            const userInsert = await client.query(
+            const userRes = await client.query(
                 `INSERT INTO UTILISATEURS (email, mot_de_passe_hash, role, adresse, ville, code_postal, pays)
-         VALUES ($1, $2, 'PRO', $3, $4, $5, $6) RETURNING id`,
-                [email, hashedPassword, address, city, zip_code, country]
+                 VALUES ($1, $2, 'PRO', $3, $4, $5, $6) RETURNING id`,
+                [email, hash, address, city, zip_code, country]
             );
-            const userId = userInsert.rows[0].id;
+            const uid = userRes.rows[0].id;
 
-            // Create Pro Details
             await client.query(
-                `INSERT INTO DETAILS_PRO (utilisateur_id, nom_entreprise, siret)
-         VALUES ($1, $2, $3)`,
-                [userId, company_name, siret]
+                `INSERT INTO DETAILS_PRO (utilisateur_id, nom_entreprise, siret, kbis_url, site_web, specialites)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [uid, company_name, siret, kbis_url, site_web, specialites]
             );
 
-            // Create Subscription (1 month free)
-            const oneMonthLater = new Date();
-            oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+            const unMois = new Date();
+            unMois.setMonth(unMois.getMonth() + 1);
 
             await client.query(
                 `INSERT INTO ABONNEMENTS_PRO (utilisateur_id, type, date_debut, date_fin, est_actif)
-         VALUES ($1, 'GRATUIT_1_MOIS', NOW(), $2, TRUE)`,
-                [userId, oneMonthLater]
+                 VALUES ($1, 'GRATUIT_1_MOIS', NOW(), $2, TRUE)`,
+                [uid, unMois]
             );
 
             await client.query('COMMIT');
-
-            const token = jwt.sign({ id: userId, role: 'PRO' }, SECRET_KEY, { expiresIn: '24h' });
-            res.status(201).json({ message: 'Professional account created', token, userId });
-        } catch (err) {
+            const token = jwt.sign({ id: uid, role: 'PRO' }, SECRET_KEY, { expiresIn: '24h' });
+            res.status(201).json({ message: 'Compte Pro créé', token, userId: uid });
+        } catch (e) {
             await client.query('ROLLBACK');
-            throw err;
+            throw e;
         } finally {
             client.release();
         }
-    } catch (err) {
-        if (err instanceof z.ZodError) {
-            return res.status(400).json({ error: err.errors });
-        }
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+    } catch (e) {
+        if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors });
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 };
 
 exports.registerIndividual = async (req, res) => {
     try {
-        const data = registerIndividualSchema.parse(req.body);
-        const { email, password, first_name, last_name, age, address, city, zip_code, country } = data;
+        const d = schemaParticulier.parse(req.body);
+        const { email, password, first_name, last_name, age, address, city, zip_code, country } = d;
 
-        const userResult = await pool.query('SELECT id FROM UTILISATEURS WHERE email = $1', [email]);
-        if (userResult.rows.length > 0) {
-            return res.status(400).json({ error: 'Email already in use' });
-        }
+        const exist = await pool.query('SELECT id FROM UTILISATEURS WHERE email = $1', [email]);
+        if (exist.rows.length > 0) return res.status(400).json({ error: 'Email pris' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
+        const hash = await bcrypt.hash(password, 10);
         const client = await pool.connect();
+
         try {
             await client.query('BEGIN');
-
-            // Create User
-            const userInsert = await client.query(
+            const userRes = await client.query(
                 `INSERT INTO UTILISATEURS (email, mot_de_passe_hash, role, adresse, ville, code_postal, pays)
-         VALUES ($1, $2, 'PARTICULIER', $3, $4, $5, $6) RETURNING id`,
-                [email, hashedPassword, address, city, zip_code, country]
+                 VALUES ($1, $2, 'PARTICULIER', $3, $4, $5, $6) RETURNING id`,
+                [email, hash, address, city, zip_code, country]
             );
-            const userId = userInsert.rows[0].id;
+            const uid = userRes.rows[0].id;
 
-            // Create Individual Details
             await client.query(
                 `INSERT INTO DETAILS_PARTICULIER (utilisateur_id, prenom, nom, age)
-         VALUES ($1, $2, $3, $4)`,
-                [userId, first_name, last_name, age]
+                 VALUES ($1, $2, $3, $4)`,
+                [uid, first_name, last_name, age]
             );
 
             await client.query('COMMIT');
-
-            const token = jwt.sign({ id: userId, role: 'PARTICULIER' }, SECRET_KEY, { expiresIn: '24h' });
-            res.status(201).json({ message: 'Individual account created', token, userId });
-        } catch (err) {
+            const token = jwt.sign({ id: uid, role: 'PARTICULIER' }, SECRET_KEY, { expiresIn: '24h' });
+            res.status(201).json({ message: 'Compte Particulier créé', token, userId: uid });
+        } catch (e) {
             await client.query('ROLLBACK');
-            throw err;
+            throw e;
         } finally {
             client.release();
         }
-    } catch (err) {
-        if (err instanceof z.ZodError) {
-            return res.status(400).json({ error: err.errors });
-        }
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+    } catch (e) {
+        if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors });
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 };
 
 exports.login = async (req, res) => {
     try {
-        const { email, password } = loginSchema.parse(req.body);
+        const d = schemaLogin.parse(req.body);
+        const { email, password } = d;
 
-        const result = await pool.query('SELECT * FROM UTILISATEURS WHERE email = $1', [email]);
-        if (result.rows.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        const resDb = await pool.query('SELECT * FROM UTILISATEURS WHERE email = $1', [email]);
+        if (resDb.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
 
-        const user = result.rows[0];
-        const validPassword = await bcrypt.compare(password, user.mot_de_passe_hash);
-
-        if (!validPassword) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        const user = resDb.rows[0];
+        const valid = await bcrypt.compare(password, user.mot_de_passe_hash);
+        if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
 
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ message: 'Login successful', token, role: user.role });
-    } catch (err) {
-        if (err instanceof z.ZodError) {
-            return res.status(400).json({ error: err.errors });
-        }
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.json({ message: 'Connexion réussie', token, role: user.role });
+    } catch (e) {
+        if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors });
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 };

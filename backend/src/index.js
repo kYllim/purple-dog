@@ -3,6 +3,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 
 const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.use(express.json());
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
 
 // Database connection
 const pool = new Pool({
