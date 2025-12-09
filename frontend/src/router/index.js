@@ -7,6 +7,8 @@ import Error404 from '../pages/Error404.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 
+
+
 const routes = [
   { path: '/', name: 'Home', component: Home },
 
