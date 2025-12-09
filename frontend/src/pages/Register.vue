@@ -72,16 +72,6 @@
               :required="true"
               :error="errors.email"
             />
-
-            <BaseInput
-              v-model="form.phone"
-              label="Téléphone (optionnel)"
-              type="tel"
-              name="phone"
-              placeholder="+33 6 12 34 56 78"
-              autocomplete="tel"
-              :error="errors.phone"
-            />
           </div>
 
           <!-- ÉTAPE 2 : Adresse complète -->
@@ -94,15 +84,6 @@
               autocomplete="address-line1"
               :required="true"
               :error="errors.address_line1"
-            />
-
-            <BaseInput
-              v-model="form.address_line2"
-              label="Complément d'adresse (optionnel)"
-              name="address_line2"
-              placeholder="Appartement, bâtiment, etc."
-              autocomplete="address-line2"
-              :error="errors.address_line2"
             />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

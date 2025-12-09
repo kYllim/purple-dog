@@ -59,14 +59,6 @@
               :error="errors.email"
             />
 
-            <BaseInput
-              v-model="form.phone"
-              label="Téléphone (optionnel)"
-              type="tel"
-              name="phone"
-              placeholder="+33 1 23 45 67 89"
-              :error="errors.phone"
-            />
 
             <BaseInput
               v-model="form.password"
@@ -128,19 +120,11 @@
 
             <BaseInput
               v-model="form.address_line1"
-              label="Adresse du siège social"
+              label="Adresse Postale"
               name="address_line1"
               placeholder="12 rue de la République"
               :required="true"
               :error="errors.address_line1"
-            />
-
-            <BaseInput
-              v-model="form.address_line2"
-              label="Complément d'adresse (optionnel)"
-              name="address_line2"
-              placeholder="Bâtiment, étage, etc."
-              :error="errors.address_line2"
             />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
