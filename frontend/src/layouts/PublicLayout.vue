@@ -2,7 +2,7 @@
   <div>
     <HeaderPublic />
 
-    <main class="container">
+    <main class="w-full min-h-screen bg-background text-text">
       <slot />
     </main>
 

@@ -8,6 +8,7 @@ import RegisterProfessionnel from '../pages/RegisterProfessionnel.vue';
 import ForgotPassword from '../pages/ForgotPassword.vue';
 import ResetPassword from '../pages/ResetPassword.vue';
 import VerifyEmail from '../pages/VerifyEmail.vue';
+import ProfileEdit from '../pages/ProfileEdit.vue';
 import Error404 from '../pages/Error404.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
@@ -24,8 +25,6 @@ const routes = [
   { path: '/register', redirect: '/inscription/particulier' }, 
   
   { path: '/mot-de-passe-oublie', name: 'ForgotPassword', component: ForgotPassword },
-  { path: '/reset-password', name: 'ResetPassword', component: ResetPassword },
-  { path: '/verify-email', name: 'VerifyEmail', component: VerifyEmail },
 
   {
     path: '/admin',
