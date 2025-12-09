@@ -1,75 +1,128 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center py-12 px-4 bg-[#F1F5F9] font-sans">
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-[#C5A059]/10 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-full h-2 bg-[#C5A059]"></div>
-      <div class="text-center relative z-10">
-        <h2 class="mt-2 text-4xl font-serif font-bold text-[#0F172A] tracking-widest uppercase">Connexion</h2>
         <p class="mt-2 text-sm text-gray-500 font-sans">Espace Purple Dog</p>
+  <AuthForm
+    title="Connexion"
+    subtitle="Accédez à votre compte Purple Dog"
+    submit-text="Se connecter"
+    loading-text="Connexion..."
+    :initial-data="initialFormData"
+    max-width="md"
+    @submit="handleLogin"
+  >
+    <!-- Contenu du formulaire -->
+    <template #default="{ form, errors }">
+      <!-- Email -->
+      <BaseInput
+        v-model="form.email"
+        label="Email"
+        type="email"
+        name="email"
+        placeholder="votre@email.com"
+        autocomplete="email"
+        :required="true"
+        :error="errors.email"
+      />
+
+      <!-- Password -->
+      <BaseInput
+        v-model="form.password"
+        label="Mot de passe"
+        :type="showPassword ? 'text' : 'password'"
+        name="password"
+        placeholder="••••••••••"
+        autocomplete="current-password"
+        :required="true"
+        :error="errors.password"
+        :icon-right="showPassword ? EyeSlashIcon : EyeIcon"
+        @icon-click="showPassword = !showPassword"
+      />
+
+      <!-- Remember me + Forgot password -->
+      <div class="flex items-center justify-between">
+        <BaseCheckbox
+          v-model="form.remember"
+          label="Se souvenir de moi"
+          name="remember"
+        />
+
+        <router-link
+          to="/mot-de-passe-oublie"
+          class="text-sm font-medium text-purple-600 hover:text-purple-500"
+        >
+          Mot de passe oublié ?
+        </router-link>
       </div>
+    </template>
 
-      <form class="space-y-6 relative z-10" @submit.prevent="connexion">
-        <BaseInput v-model="f.email" type="email" label="Email" requis :erreur="e.email" placeholder="erkant.yildiz@mail.com" />
-        
-        <div class="space-y-1">
-          <BaseInput v-model="f.mdp" type="password" label="Mot de passe" requis :erreur="e.mdp" placeholder="••••••••" />
-          <div class="flex justify-end">
-            <a href="#" class="text-xs text-[#C5A059] hover:underline">Mot de passe oublié ?</a>
-          </div>
-        </div>
-
-        <div class="pt-4">
-          <BaseButton type="submit" class="w-full py-3 text-lg" :desactive="chargement">
-             <template #prefix>
-                <span v-if="!chargement"></span>
-             </template>
-            {{ chargement ? '...' : 'Se connecter' }}
-          </BaseButton>
-        </div>
-        
-        <p class="text-center text-sm text-gray-500">
-          Pas de compte ? <router-link to="/register" class="font-medium text-[#C5A059]">S'inscrire</router-link>
+    <!-- Footer avec liens -->
+    <template #footer>
+      <div class="pt-6 border-t border-gray-200">
+        <p class="text-center text-sm text-gray-600 mb-4">
+          Pas encore de compte ?
         </p>
-      </form>
-    </div>
-  </div>
+        <div class="grid grid-cols-1 gap-3">
+          <router-link
+            to="/inscription/particulier"
+            class="w-full inline-flex justify-center py-2.5 px-4 border border-purple-300 rounded-lg shadow-sm bg-white text-sm font-medium text-purple-700 hover:bg-purple-50 transition-all duration-200"
+          >
+            S'inscrire en tant que particulier
+          </router-link>
+          <router-link
+            to="/inscription/professionnel"
+            class="w-full inline-flex justify-center py-2.5 px-4 border border-purple-600 rounded-lg shadow-sm bg-purple-600 text-sm font-medium text-white hover:bg-purple-700 transition-all duration-200"
+          >
+            S'inscrire en tant que professionnel
+          </router-link>
+        </div>
+      </div>
+    </template>
+  </AuthForm>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
-import BaseInput from '../components/BaseInput.vue'
-import BaseButton from '../components/BaseButton.vue'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import AuthForm from '@/components/AuthForm.vue';
+import BaseInput from '@/components/BaseInput.vue';
+import BaseCheckbox from '@/components/BaseCheckbox.vue';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 
-const router = useRouter()
-const chargement = ref(false)
-const e = reactive({})
+const router = useRouter();
+const showPassword = ref(false);
 
-const f = reactive({
+const initialFormData = {
   email: '',
-  mdp: ''
-})
+  password: '',
+  remember: false
+};
 
-const valider = () => {
-  Object.keys(e).forEach(k => delete e[k])
-  let ok = true
-  if (!f.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) { e.email = 'Invalide'; ok = false }
-  if (!f.mdp) { e.mdp = 'Requis'; ok = false }
-  return ok
-}
-
-const connexion = async () => {
-  if (!valider()) return
-  chargement.value = true
+const handleLogin = async (formData, { setErrors, setLoading }) => {
   try {
-    const res = await axios.post('http://localhost:3000/auth/login', { email: f.email, password: f.mdp })
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('role', res.data.role)
-    router.push('/')
-  } catch (err) {
-    alert(err.response?.data?.error || 'Erreur')
+    // TODO: Remplacer par ton appel API
+    // const response = await api.post('/api/auth/login', formData);
+    
+    // Simulation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('Login:', formData);
+    
+    // TODO: Stocker le token et rediriger selon user_type
+    // if (response.data.user.user_type === 'particulier') {
+    //   router.push('/particulier/dashboard');
+    // } else if (response.data.user.user_type === 'professionnel') {
+    //   router.push('/professionnel/dashboard');
+    // }
+    
+  } catch (error) {
+    if (error.response?.data?.errors) {
+      setErrors(error.response.data.errors);
+    } else {
+      setErrors({
+        email: 'Email ou mot de passe incorrect'
+      });
+    }
   } finally {
-    chargement.value = false
+    setLoading(false);
   }
-}
+};
 </script>

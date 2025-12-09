@@ -3,14 +3,24 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../pages/Home.vue';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
+import RegisterProfessionnel from '../pages/RegisterProfessionnel.vue';
+import ForgotPassword from '../pages/ForgotPassword.vue';
 import Error404 from '../pages/Error404.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
 
-  { path: '/login', name: 'Login', component: Login },
-  { path: '/register', name: 'Register', component: Register },
+  // Routes d'authentification
+  { path: '/connexion', name: 'Login', component: Login },
+  { path: '/login', redirect: '/connexion' }, 
+  
+  { path: '/inscription/particulier', name: 'RegisterParticulier', component: Register },
+  { path: '/inscription/professionnel', name: 'RegisterProfessionnel', component: RegisterProfessionnel },
+  { path: '/register', redirect: '/inscription/particulier' }, 
+  
+  { path: '/mot-de-passe-oublie', name: 'ForgotPassword', component: ForgotPassword },
 
+  // 404
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 }
 ];
 
