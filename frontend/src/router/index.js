@@ -7,6 +7,7 @@ import ProfileEdit from '../pages/ProfileEdit.vue';
 import Error404 from '../pages/Error404.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
+import AdminUsers from '../pages/admin/Users.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -19,7 +20,8 @@ const routes = [
     path: '/admin',
     component: AdminLayout,
     children: [
-      { path: '', name: 'AdminDashboard', component: AdminDashboard }
+      { path: '', name: 'AdminDashboard', component: AdminDashboard },
+      { path: 'users', name: 'AdminUsers', component: AdminUsers }
     ]
   },
 

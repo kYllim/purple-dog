@@ -1,17 +1,14 @@
 <template>
   <div class="flex h-screen bg-background font-sans text-text">
-    <!-- Sidebar -->
     <aside
       class="fixed inset-y-0 left-0 z-50 w-64 transform bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0"
       :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="flex h-full flex-col">
-        <!-- Logo Area -->
         <div class="flex h-20 items-center justify-center border-b border-slate-700 bg-slate-900 shadow-xl">
             <h1 class="text-2xl font-bold tracking-wider text-accent">PURPLE DOG</h1>
         </div>
 
-        <!-- Navigation -->
         <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-2">
             <router-link
               to="/admin"
@@ -24,13 +21,15 @@
               Dashboard
             </router-link>
 
-             <!-- Placeholder Links for future tabs -->
-            <a href="#" class="flex items-center rounded-lg px-4 py-3 text-slate-400 transition-colors duration-200 hover:bg-slate-800 hover:text-white">
+            <router-link to="/admin/users" 
+               class="flex items-center rounded-lg px-4 py-3 transition-colors duration-200 hover:bg-slate-800 hover:text-white"
+               active-class="bg-slate-800 text-accent ring-1 ring-slate-700 shadow-lg text-white"
+            >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
                 Utilisateurs
-            </a>
+            </router-link>
             <a href="#" class="flex items-center rounded-lg px-4 py-3 text-slate-400 transition-colors duration-200 hover:bg-slate-800 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -46,7 +45,6 @@
             </a>
         </nav>
 
-        <!-- User Profile (Bottom Sidebar) -->
         <div class="border-t border-slate-700 bg-slate-900 p-4">
             <div class="flex items-center">
                  <div class="h-10 w-10 flex-shrink-0 bg-slate-700 rounded-full flex items-center justify-center text-accent font-bold">
@@ -64,9 +62,7 @@
       </div>
     </aside>
 
-    <!-- Content Area -->
     <div class="flex flex-1 flex-col overflow-hidden">
-        <!-- Top Mobile Header -->
         <header class="flex items-center justify-between bg-white px-6 py-4 shadow-sm lg:hidden">
             <h1 class="text-xl font-bold text-slate-800">Admin</h1>
             <button @click="toggleSidebar" class="text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -76,14 +72,12 @@
             </button>
         </header>
 
-         <!-- Overlay for mobile sidebar -->
         <div 
             v-if="isSidebarOpen" 
             @click="toggleSidebar" 
             class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
         ></div>
 
-        <!-- Main Content -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
             <router-view></router-view>
         </main>

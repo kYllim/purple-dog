@@ -6,9 +6,24 @@ const schemaCreation = z.object({
     role: z.enum(['PRO', 'PARTICULIER']),
     email: z.string().email(),
     password: z.string().min(8),
-    // Champs conditionnels gérés souplement ou via un super refine,
-    // mais pour rester simple on met tout optionnel et on vérifie dans le code ou on fait une union
-    // Ici on laisse flexible pour l'exemple étudiant
+
+    // Infos Perso / Adresse
+    adresse: z.string().optional(),
+    ville: z.string().optional(),
+    code_postal: z.string().optional(),
+    pays: z.string().optional(),
+
+    // Infos Particulier
+    prenom: z.string().optional(),
+    nom: z.string().optional(),
+    age: z.coerce.number().optional(),
+
+    // Infos Pro
+    nom_entreprise: z.string().optional(),
+    siret: z.string().optional(),
+    site_web: z.string().optional(),
+    kbis_url: z.string().optional(),
+    specialites: z.string().optional()
 }).passthrough();
 
 const lister = async (req, res) => {
