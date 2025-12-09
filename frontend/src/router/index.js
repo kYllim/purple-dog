@@ -6,6 +6,8 @@ import Register from '../pages/Register.vue';
 import RegisterProfessionnel from '../pages/RegisterProfessionnel.vue';
 import ForgotPassword from '../pages/ForgotPassword.vue';
 import Error404 from '../pages/Error404.vue';
+import AdminLayout from '../layouts/AdminLayout.vue';
+import AdminDashboard from '../pages/admin/Dashboard.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -20,7 +22,14 @@ const routes = [
   
   { path: '/mot-de-passe-oublie', name: 'ForgotPassword', component: ForgotPassword },
 
-  // 404
+  {
+    path: '/admin',
+    component: AdminLayout,
+    children: [
+      { path: '', name: 'AdminDashboard', component: AdminDashboard }
+    ]
+  },
+
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 }
 ];
 
