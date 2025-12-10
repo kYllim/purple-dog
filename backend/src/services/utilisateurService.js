@@ -4,13 +4,13 @@ const bcrypt = require('bcryptjs');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const listerUtilisateurs = async () => {
-    const resultat = await pool.query('SELECT id, email, role, cree_le FROM UTILISATEURS ORDER BY cree_le DESC');
+    const resultat = await pool.query('SELECT id, email, role, cree_le, est_bloque FROM UTILISATEURS ORDER BY cree_le DESC');
     return resultat.rows;
 };
 
 const obtenirUtilisateurParId = async (id) => {
     const requete = `
-        SELECT u.id, u.email, u.role, u.cree_le,
+        SELECT u.id, u.email, u.role, u.cree_le, u.est_bloque,
                dp.prenom, dp.nom, dp.age, 
                dpro.nom_entreprise, dpro.siret
         FROM UTILISATEURS u
@@ -94,7 +94,7 @@ const modifierUtilisateur = async (id, donnees) => {
         const valeursUser = [];
         let indexUser = 1;
 
-        const colonnesUser = ['email', 'adresse', 'ville', 'code_postal', 'pays'];
+        const colonnesUser = ['email', 'adresse', 'ville', 'code_postal', 'pays', 'est_bloque'];
 
         for (const col of colonnesUser) {
             if (donnees[col] !== undefined) {
