@@ -91,11 +91,12 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import AuthForm from '@/components/AuthForm.vue';
-import BaseInput from '@/components/BaseInput.vue';
-import BaseCheckbox from '@/components/BaseCheckbox.vue';
+import AuthForm from '../components/AuthForm.vue';
+import BaseInput from '../components/BaseInput.vue';
+import BaseCheckbox from '../components/BaseCheckbox.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 const router = useRouter();
 const authStore = useAuthStore();

@@ -103,10 +103,17 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+<<<<<<< HEAD
 import AuthForm from '@/components/AuthForm.vue';
 import BaseInput from '@/components/BaseInput.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 import authService from '@/services/authService';
+=======
+import AuthForm from '../components/AuthForm.vue';
+import BaseInput from '../components/BaseInput.vue';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
+import authService from '../services/authService';
+>>>>>>> particulier
 
 const router = useRouter();
 const route = useRoute();

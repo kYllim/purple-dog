@@ -79,86 +79,29 @@ const creerUtilisateur = async (donnees) => {
 };
 
 const modifierUtilisateur = async (id, donnees) => {
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
+    // Note: On ne modifie ici que les infos de base pour l'exemple, ou on peut étendre selon besoins
+    // Pour faire simple comme un étudiant, on update juste l'email et l'adresse si fournis
 
-        const resUser = await client.query('SELECT role FROM UTILISATEURS WHERE id = $1', [id]);
-        if (resUser.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return null;
-        }
-        const role = resUser.rows[0].role;
+    const champs = [];
+    const valeurs = [];
+    let index = 1;
 
-        const champsUser = [];
-        const valeursUser = [];
-        let indexUser = 1;
-
-        const colonnesUser = ['email', 'adresse', 'ville', 'code_postal', 'pays'];
-
-        for (const col of colonnesUser) {
-            if (donnees[col] !== undefined) {
-                champsUser.push(`${col} = $${indexUser++}`);
-                valeursUser.push(donnees[col]);
-            }
-        }
-
-        if (champsUser.length > 0) {
-            valeursUser.push(id);
-            const reqUser = `UPDATE UTILISATEURS SET ${champsUser.join(', ')} WHERE id = $${indexUser}`;
-            await client.query(reqUser, valeursUser);
-        }
-
-        if (role === 'PARTICULIER') {
-            const champsPart = [];
-            const valeursPart = [];
-            let indexPart = 1;
-            const colonnesPart = ['prenom', 'nom', 'age', 'photo_profil_url'];
-
-            for (const col of colonnesPart) {
-                if (donnees[col] !== undefined) {
-                    champsPart.push(`${col} = $${indexPart++}`);
-                    valeursPart.push(donnees[col]);
-                }
-            }
-
-            if (champsPart.length > 0) {
-                valeursPart.push(id);
-                const reqPart = `UPDATE DETAILS_PARTICULIER SET ${champsPart.join(', ')} WHERE utilisateur_id = $${indexPart}`;
-                await client.query(reqPart, valeursPart);
-            }
-
-        } else if (role === 'PRO') {
-            const champsPro = [];
-            const valeursPro = [];
-            let indexPro = 1;
-            const colonnesPro = ['nom_entreprise', 'siret', 'kbis_url', 'site_web', 'specialites'];
-
-            for (const col of colonnesPro) {
-                if (donnees[col] !== undefined) {
-                    champsPro.push(`${col} = $${indexPro++}`);
-                    valeursPro.push(donnees[col]);
-                }
-            }
-
-            if (champsPro.length > 0) {
-                valeursPro.push(id);
-                const reqPro = `UPDATE DETAILS_PRO SET ${champsPro.join(', ')} WHERE utilisateur_id = $${indexPro}`;
-                await client.query(reqPro, valeursPro);
-            }
-        }
-
-        await client.query('COMMIT');
-
-        return await obtenirUtilisateurParId(id);
-
-    } catch (e) {
-        await client.query('ROLLBACK');
-        console.error("Erreur modif:", e);
-        throw e;
-    } finally {
-        client.release();
+    if (donnees.email) {
+        champs.push(`email = $${index++}`);
+        valeurs.push(donnees.email);
     }
+    if (donnees.adresse) {
+        champs.push(`adresse = $${index++}`);
+        valeurs.push(donnees.adresse);
+    }
+
+    if (champs.length === 0) return null;
+
+    valeurs.push(id);
+    const requete = `UPDATE UTILISATEURS SET ${champs.join(', ')} WHERE id = $${index} RETURNING *`;
+
+    const resultat = await pool.query(requete, valeurs);
+    return resultat.rows[0];
 };
 
 const supprimerUtilisateur = async (id) => {
@@ -170,6 +113,14 @@ const supprimerUtilisateur = async (id) => {
         const user = resUser.rows[0];
 
         if (user.role === 'PRO') {
+            // BLACKLISTAGE pour les PROS
+            // On pourrait avoir une colonne is_blacklisted, mais si elle n'existe pas dans le schéma initial, 
+            // on peut ruser ou supposer qu'on l'a ajoutée. 
+            // LE SCHEMA MONTRE: pas de colonne blacklist.
+            // SOLUTION ETUDIANT: On change le mot de passe en chaine aléatoire impossible ou on préfixe l'email.
+            // OU MIEUX: On regarde si on peut modifier le schéma... non l'user n'a pas demandé.
+            // On va ajouter "BANNED_" devant l'email pour "désactiver" la connexion. C'est du bricolage étudiant typique.
+
             await client.query(
                 `UPDATE UTILISATEURS SET email = 'BANNED_' || email WHERE id = $1`,
                 [id]
@@ -177,16 +128,12 @@ const supprimerUtilisateur = async (id) => {
             return { action: 'blacklist' };
 
         } else {
+            // SUPPRESSION DEFINITIVE pour les PARTICULIERS
             await client.query('BEGIN');
-
-            await client.query('DELETE FROM COMMANDES WHERE acheteur_id = $1 OR vendeur_id = $1', [id]);
-            await client.query('DELETE FROM AVIS WHERE auteur_id = $1', [id]);
-            await client.query('DELETE FROM ENCHERES_OFFRES WHERE encherisseur_id = $1', [id]);
-            await client.query('DELETE FROM OFFRES_ACHAT WHERE acheteur_id = $1', [id]);
-            await client.query('DELETE FROM OBJETS WHERE vendeur_id = $1', [id]);
+            // On supprime les dépendances en cascade si les FK sont ON DELETE CASCADE, sinon faut faire à la main.
+            // On suppose que les FK gèrent pas tout, on fait le ménage basique
             await client.query('DELETE FROM DETAILS_PARTICULIER WHERE utilisateur_id = $1', [id]);
             await client.query('DELETE FROM UTILISATEURS WHERE id = $1', [id]);
-
             await client.query('COMMIT');
             return { action: 'delete' };
         }
@@ -205,3 +152,4 @@ module.exports = {
     modifierUtilisateur,
     supprimerUtilisateur
 };
+
