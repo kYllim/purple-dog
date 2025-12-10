@@ -1,5 +1,5 @@
 <template>
-  <ParticulierLayout>
+  <PublicLayout>
 
 
 <!-- 🎨 HERO -->
@@ -183,12 +183,12 @@
 </section>
 ```
 
-  </ParticulierLayout>
+  </PublicLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from "vue";
-import ParticulierLayout from "../../layouts/ParticulierLayout.vue";
+import PublicLayout from "../../layouts/PublicLayout.vue";
 import VendreObjetStep1 from "../../components/objet/steps/VendreObjetStep1.vue";
 import VendreObjetStep2 from "../../components/objet/steps/VendreObjetStep2.vue";
 import VendreObjetStep3 from "../../components/objet/steps/VendreObjetStep3.vue";

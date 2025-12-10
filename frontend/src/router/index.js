@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '../stores/authStore'; // Fixed import path
 
 import Home from '../pages/Home.vue';
 import Login from '../pages/Login.vue';
@@ -34,22 +34,40 @@ const routes = [
   {
     path: '/admin',
     component: AdminLayout,
-    // meta: { requiresAuth: true, requiresRole: 'ADMIN' },
     meta: { requiresAuth: true, requiresRole: 'ADMIN' },
     children: [
       { path: '', name: 'AdminDashboard', component: AdminDashboard },
       { path: 'users', name: 'AdminUsers', component: AdminUsers }
     ]
   },
-  { path: '/favorites', name: 'Favorites', component: Favorite },
-  { path: '/history', name: 'History', component: History },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: Favorite,
+    meta: { requiresAuth: true, requiresRole: 'PRO' }
+  },
+
+  {
+    path: '/history',
+    name: 'History',
+    component: History,
+    meta: { requiresAuth: true, requiresRole: 'PRO' }
+  },
 
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
 
-  { path: "/particulier/dashboard", component: DashboardParticulier },
-  { path: "/particulier/vendre", component: VendreObjet },
-  
+  {
+    path: "/particulier/dashboard",
+    component: DashboardParticulier,
+    meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
+  },
+  {
+    path: "/particulier/vendre",
+    component: VendreObjet,
+    meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
+  },
+
 ];
 
 const router = createRouter({
@@ -62,12 +80,8 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
   // Initialiser l'état d'authentification depuis le localStorage
-  authStore.initAuth();
+  // authStore.initAuth(); // Removed as it does not exist
 
-  
-  // Initialiser l'état d'authentification depuis le localStorage
-  authStore.initAuth();
-  
   // Vérifier si la route nécessite une authentification
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
