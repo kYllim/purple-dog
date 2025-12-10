@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS UTILISATEURS (
     token_verification_expire TIMESTAMP,
     token_reset_password VARCHAR(255),
     token_reset_password_expire TIMESTAMP,
+    est_bloque BOOLEAN DEFAULT FALSE,
     cree_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     mis_a_jour_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
