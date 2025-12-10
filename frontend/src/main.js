@@ -5,6 +5,7 @@ import { createPinia } from 'pinia';
 
 import './assets/css/base.css';
 
+
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);

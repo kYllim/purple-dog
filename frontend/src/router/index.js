@@ -6,6 +6,8 @@ import Register from '../pages/Register.vue';
 import RegisterProfessionnel from '../pages/RegisterProfessionnel.vue';
 import ForgotPassword from '../pages/ForgotPassword.vue';
 import Error404 from '../pages/Error404.vue';
+import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
+
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -19,6 +21,8 @@ const routes = [
   { path: '/register', redirect: '/inscription/particulier' }, 
   
   { path: '/mot-de-passe-oublie', name: 'ForgotPassword', component: ForgotPassword },
+
+  { path: '/details', name: 'Details', component: ObjectDetailsPage },
 
   // 404
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 }
