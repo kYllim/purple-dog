@@ -7,6 +7,7 @@ import { Icon } from '@iconify/vue';
 
 import './assets/css/base.css';
 
+
 const app = createApp(App);
 app.component('Icon', Icon);
 app.use(createPinia());

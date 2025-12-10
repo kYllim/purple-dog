@@ -17,6 +17,8 @@ import AdminDashboard from '../pages/admin/Dashboard.vue';
 import AdminUsers from '../pages/admin/Users.vue';
 import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
+import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
+
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -68,6 +70,7 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
   },
 
+  { path: '/details', name: 'Details', component: ObjectDetailsPage },
 ];
 
 const router = createRouter({
