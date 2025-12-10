@@ -21,7 +21,6 @@
               Dashboard
             </router-link>
 
-            <a href="#" class="flex items-center rounded-lg px-4 py-3 text-slate-400 transition-colors duration-200 hover:bg-slate-800 hover:text-white">
             <router-link to="/admin/users" 
                class="flex items-center rounded-lg px-4 py-3 transition-colors duration-200 hover:bg-slate-800 hover:text-white"
                active-class="bg-slate-800 text-accent ring-1 ring-slate-700 shadow-lg text-white"

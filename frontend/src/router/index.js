@@ -21,18 +21,18 @@ const routes = [
 
   // Routes d'authentification
   { path: '/connexion', name: 'Login', component: Login },
-  { path: '/login', redirect: '/connexion' }, 
-  
+  { path: '/login', redirect: '/connexion' },
+
   { path: '/inscription/particulier', name: 'RegisterParticulier', component: Register },
   { path: '/inscription/professionnel', name: 'RegisterProfessionnel', component: RegisterProfessionnel },
-  { path: '/register', redirect: '/inscription/particulier' }, 
-  
+  { path: '/register', redirect: '/inscription/particulier' },
+
   { path: '/mot-de-passe-oublie', name: 'ForgotPassword', component: ForgotPassword },
 
   {
     path: '/admin',
     component: AdminLayout,
-    meta: { requiresAuth: true, requiresRole: 'ADMIN' },
+    // meta: { requiresAuth: true, requiresRole: 'ADMIN' },
     children: [
       { path: '', name: 'AdminDashboard', component: AdminDashboard },
       { path: 'users', name: 'AdminUsers', component: AdminUsers }
@@ -53,10 +53,10 @@ const router = createRouter({
 // Middleware de navigation pour la protection des routes
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-  
+
   // Initialiser l'état d'authentification depuis le localStorage
   authStore.initAuth();
-  
+
   // Vérifier si la route nécessite une authentification
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
