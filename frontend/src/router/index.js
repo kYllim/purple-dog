@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 import Home from '../pages/Home.vue';
 import Login from '../pages/Login.vue';
@@ -10,6 +10,8 @@ import ResetPassword from '../pages/ResetPassword.vue';
 import VerifyEmail from '../pages/VerifyEmail.vue';
 import ProfileEdit from '../pages/ProfileEdit.vue';
 import Error404 from '../pages/Error404.vue';
+import DashboardParticulier from "../pages/particulier/Dashboard.vue";
+import VendreObjet from "../pages/particulier/VendreObjet.vue";
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 import AdminUsers from '../pages/admin/Users.vue';
@@ -42,6 +44,7 @@ const routes = [
     path: '/admin',
     component: AdminLayout,
     // meta: { requiresAuth: true, requiresRole: 'ADMIN' },
+    meta: { requiresAuth: true, requiresRole: 'ADMIN' },
     children: [
       { path: '', name: 'AdminDashboard', component: AdminDashboard },
       { path: 'users', name: 'AdminUsers', component: AdminUsers }
@@ -51,7 +54,11 @@ const routes = [
   { path: '/history', name: 'History', component: History },
 
 
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 }
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
+
+  { path: "/particulier/dashboard", component: DashboardParticulier },
+  { path: "/particulier/vendre", component: VendreObjet },
+  
 ];
 
 const router = createRouter({
@@ -66,6 +73,10 @@ router.beforeEach((to, from, next) => {
   // Initialiser l'état d'authentification depuis le localStorage
   authStore.initAuth();
 
+  
+  // Initialiser l'état d'authentification depuis le localStorage
+  authStore.initAuth();
+  
   // Vérifier si la route nécessite une authentification
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
