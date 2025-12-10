@@ -16,6 +16,8 @@ import AdminUsers from '../pages/admin/Users.vue';
 import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 
+import { useAuthStore } from '../stores/auth';
+
 const routes = [
   { path: '/', name: 'Home', component: Home },
 
@@ -28,6 +30,13 @@ const routes = [
   { path: '/register', redirect: '/inscription/particulier' },
 
   { path: '/mot-de-passe-oublie', name: 'ForgotPassword', component: ForgotPassword },
+
+  // {
+  //   path: '/profile/edit',
+  //   name: 'ProfileEdit',
+  //   component: ProfileEdit,
+  //   meta: { requiresAuth: true }
+  // },
 
   {
     path: '/admin',
