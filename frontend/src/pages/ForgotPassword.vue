@@ -90,9 +90,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import AuthForm from '@/components/AuthForm.vue';
-import BaseInput from '@/components/BaseInput.vue';
-import authService from '@/services/authService';
+import authService from '../services/authService';
 import AuthForm from '../components/AuthForm.vue';
 import BaseInput from '../components/BaseInput.vue';
 const emailSent = ref(false);

@@ -205,7 +205,6 @@ import BaseInput from '../components/BaseInput.vue';
 import BaseCheckbox from '../components/BaseCheckbox.vue';
 import BaseFileUpload from '../components/BaseFileUpload.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
-import { useAuthStore } from '@/stores/authStore';
 import { useAuthStore } from '../stores/authStore';
 
 const router = useRouter();

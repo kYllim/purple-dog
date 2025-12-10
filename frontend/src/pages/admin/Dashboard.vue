@@ -1,5 +1,4 @@
 <template>
-<<<<<<< HEAD
   
   <div class="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 font-sans text-slate-800">
     
@@ -33,7 +32,6 @@
            <h2 class="text-lg font-bold text-slate-700 mb-4">Activité Récente</h2>
            <p class="text-slate-500 italic">Aucune activité récente.</p>
        </div>
-=======
   <div>
     <h2 class="mb-6 text-3xl font-extrabold text-slate-800">Tableau de bord</h2>
 
@@ -156,12 +154,10 @@
          <div class="border-t border-slate-100 px-6 py-4 text-center">
             <a href="#" class="text-sm font-medium text-accent hover:text-yellow-600">Voir toute l'activité &rarr;</a>
         </div>
->>>>>>> particulier
     </div>
 
   </div>
 </template>
-<<<<<<< HEAD
 
 <style scoped>
 .animate-fade-in-up {
@@ -172,5 +168,3 @@
   to { opacity: 1; transform: translateY(0); }
 }
 </style>
-=======
->>>>>>> particulier
