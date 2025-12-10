@@ -7,8 +7,30 @@
           
           <div id="gallery-container" class="bg-white rounded-xl shadow-2xl overflow-hidden mb-8 h-[700px]">
               <div class="relative h-full group">
-                  <img class="w-full h-full object-cover" :src="item.photos_urls[0]" :alt="item.titre" />
                   
+                  <img 
+                      :key="currentImage" 
+                      class="w-full h-full object-cover transition-opacity duration-300" 
+                      :src="currentImage" 
+                      :alt="item.titre" 
+                  />
+                  
+                  <button 
+                      @click="navigateImage(-1)"
+                      class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 text-text opacity-0 group-hover:opacity-100 hover:bg-accent hover:text-white transition-opacity duration-200 shadow-md flex items-center justify-center"
+                      aria-label="Image précédente"
+                  >
+                      <i class="fa-solid fa-chevron-left text-xl"></i>
+                  </button>
+                  
+                  <button 
+                      @click="navigateImage(1)"
+                      class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 text-text opacity-0 group-hover:opacity-100 hover:bg-accent hover:text-white transition-opacity duration-200 shadow-md flex items-center justify-center"
+                      aria-label="Image suivante"
+                  >
+                      <i class="fa-solid fa-chevron-right text-xl"></i>
+                  </button>
+
                   <button 
                       @click="toggleFavorite"
                       :class="['absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg', isFavorite ? 'bg-accent text-white' : 'bg-white/90 hover:bg-accent hover:text-white']"
@@ -18,13 +40,23 @@
                   </button>
                   
                   <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-text/60 to-transparent p-6">
-                      <div class="flex gap-3">
-                          <div v-for="(url, index) in item.photos_urls.slice(0,4)" :key="index" class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-lg border-2 border-white hover:border-accent cursor-pointer transition-all duration-200"></div>
+                      <div class="flex gap-3 overflow-x-auto pb-2"> 
+                          <div 
+                              v-for="(url, index) in item.photos_urls" 
+                              :key="index"
+                              @mouseenter="currentImage = url"
+                              @click="currentImage = url"
+                              :class="[
+                                  'w-20 h-20 bg-white/20 backdrop-blur-sm rounded-lg border-2 flex-shrink-0 cursor-pointer transition-all duration-200',
+                                  url === currentImage ? 'border-accent shadow-md' : 'border-white/50 hover:border-accent'
+                              ]"
+                          >
+                            <img :src="url" :alt="`Vue ${index + 1}`" class="w-full h-full object-cover rounded-md"/>
+                          </div>
                       </div>
                   </div>
               </div>
           </div>
-
           <div id="description-section" class="bg-white rounded-xl shadow-lg p-8 mb-8">
               <h2 class="text-3xl font-extrabold text-text mb-6">Description & Authenticité</h2>
               <div class="border-t border-accent/20 pt-6">
@@ -79,9 +111,9 @@
           <div id="vendor-section" class="bg-white rounded-xl shadow-lg p-8">
               <h2 class="text-3xl font-extrabold text-text mb-6">Vendeur</h2>
               <div class="border-t border-accent/20 pt-6">
-                  <div class="flex items-start justify-between">
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                       <div class="flex items-center gap-5">
-                          <div class="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center">
+                          <div class="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
                               <i class="fa-solid fa-user text-3xl text-accent"></i>
                           </div>
                           <div>
@@ -97,7 +129,7 @@
                               <div class="text-text/60">Vendeur {{ item.vendeur_type === 'PARTICULIER' ? 'Particulier' : 'Professionnel' }}</div>
                           </div>
                       </div>
-                      <button class="bg-text text-white px-8 py-3 rounded-lg font-bold hover:bg-text/90 transition-all duration-200 shadow-md">
+                      <button class="bg-text text-white px-8 py-3 rounded-lg font-bold hover:bg-text/90 transition-all duration-200 shadow-md w-full sm:w-auto">
                           Contacter
                       </button>
                   </div>
@@ -121,32 +153,43 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-// NOTE: Le chemin d'importation de AuctionBox doit être corrigé en fonction de la structure réelle
-// (ex: '../components/AuctionBox.vue' si ObjectDetailsPage est dans src/pages)
+import { ref, onMounted } from 'vue'; 
 import AuctionBox from '../components/AuctionBox.vue'; 
-// NOTE: 'Icon' est retiré ici car il est maintenant dans le template directement (fa-solid)
 
 // Données de l'utilisateur et de l'objet (Simulées)
 const currentUserId = ref('u12345'); 
-const hasPaymentMethod = ref(true); // Passez à 'false' pour tester l'alerte Stripe
+const hasPaymentMethod = ref(true); 
 const isFavorite = ref(false); 
+
+// Variable pour suivre l'image actuellement affichée (Initialisée ci-dessous)
+const currentImage = ref(''); 
 
 const item = ref({
     titre: 'Vase bleu et blanc de la Dynastie Ming',
     description: "Ce vase exceptionnel de la Dynastie Ming (1368-1644) représente l'apogée de l'art céramique chinois. Orné de motifs de dragons bleus sur fond blanc immaculé, cette pièce rare témoigne du savoir-faire ancestral des maîtres potiers impériaux.",
-    vendeur_id: 'v421a', // ID du vendeur (Changez à 'u12345' pour tester le blocage)
+    vendeur_id: 'v421a', 
     vendeur_prenom: 'Pierre', 
     vendeur_nom: 'Antiquaire Dupont & Fils',
     vendeur_type: 'PARTICULIER', 
     categorie_nom: 'Objets d\'art & tableaux', 
-    type_vente: 'ENCHERE', // Basculez entre 'ENCHERE' et 'INSTANTANE'
+    type_vente: 'ENCHERE', 
     statut: 'PUBLIE', 
     
     // Détails techniques
     poids_kg: 3.2,
     dimensions: { longueur: 28, largeur: 28, hauteur: 42, unite: 'cm' },
-    photos_urls: ['https://storage.googleapis.com/uxpilot-auth.appspot.com/7f97c758e4-935d57aad5f4c0414f03.png', '/img/photo2.jpg', '/img/photo3.jpg'], 
+    photos_urls: [
+        'https://storage.googleapis.com/uxpilot-auth.appspot.com/7f97c758e4-935d57aad5f4c0414f03.png', 
+        '/img/photo2_arriere.jpg', 
+        '/img/photo3_dessus.jpg', 
+        '/img/photo4_dessous.jpg', 
+        '/img/photo5_signature.jpg', 
+        '/img/photo6_tranche.jpg', 
+        '/img/photo7_detail1.jpg', 
+        '/img/photo8_detail2.jpg', 
+        '/img/photo9_context.jpg', 
+        '/img/photo10_certificat.jpg'
+    ], 
 
     // Données de prix
     prix_reserve: 11500.00, 
@@ -156,8 +199,18 @@ const item = ref({
 function toggleFavorite() {
     isFavorite.value = !isFavorite.value;
 }
+
+// Initialise l'image principale au chargement du composant
+onMounted(() => {
+    if (item.value.photos_urls.length > 0) {
+        currentImage.value = item.value.photos_urls[0];
+    }
+});
 </script>
+
 <style scoped>
-/* Assurez-vous que les classes de couleur sont définies dans Tailwind: text, background, accent */
-/* .accent-accent est une classe Tailwind pour les couleurs de formulaire */
+/* Le style est géré principalement par Tailwind CSS dans le template */
+.accent-accent {
+    accent-color: var(--color-accent, #C5A059); 
+}
 </style>

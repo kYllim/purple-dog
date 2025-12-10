@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white rounded-xl shadow-xl p-8">
+    <div class="bg-white rounded-xl p-8">
         <div v-if="item.type_vente === 'ENCHERE'" id="auction-mode">
             
             <div class="mb-6">
@@ -51,7 +51,7 @@
                 <button 
                     @click="placeBid"
                     :disabled="nextBid < minNextBid"
-                    class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg shadow-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
+                    class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
                 >
                     Placer mon offre
                 </button>
@@ -78,7 +78,7 @@
 
             <button 
                 :disabled="!hasPaymentMethod"
-                class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg shadow-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
+                class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
             >
                 Acheter immédiatement
             </button>
@@ -99,28 +99,6 @@
             </div>
         </div>
         
-        <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-truck text-accent text-2xl"></i>
-                    <div>
-                        <div class="font-bold text-text">Livraison assurée</div>
-                        <div class="text-sm text-text/60">Estimation : 3-5 jours</div>
-                    </div>
-                </div>
-                <div class="font-bold text-accent">Gratuit</div>
-            </div>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-rotate-left text-accent text-2xl"></i>
-                    <div>
-                        <div class="font-bold text-text">Retour accepté</div>
-                        <div class="text-sm text-text/60">Sous 14 jours</div>
-                    </div>
-                </div>
-                <i class="fa-solid fa-check text-accent text-xl"></i>
-            </div>
-        </div>
     </div>
 </template>
 
