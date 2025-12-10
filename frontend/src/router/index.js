@@ -13,6 +13,8 @@ import Error404 from '../pages/Error404.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 import AdminUsers from '../pages/admin/Users.vue';
+import Favorite from '../components/cards/FavoriteCard.vue';
+import History from '../components/cards/HistoryCard.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -36,6 +38,9 @@ const routes = [
       { path: 'users', name: 'AdminUsers', component: AdminUsers }
     ]
   },
+  { path: '/favorites', name: 'Favorites', component: Favorite },
+  { path: '/history', name: 'History', component: History },
+
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 }
 ];
