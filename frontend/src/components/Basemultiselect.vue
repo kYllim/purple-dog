@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <!-- Label -->
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-2">
+    <label v-if="label" class="block text-sm font-medium text-text/70 mb-2 font-sans">
       {{ label }}
       <span v-if="required" class="text-red-500 ml-1">*</span>
     </label>
@@ -11,13 +11,13 @@
       <span
         v-for="item in selectedItems"
         :key="item.value"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium font-sans bg-accent/10 text-accent border border-accent/20"
       >
         {{ item.label }}
         <button
           type="button"
           @click="removeItem(item.value)"
-          class="hover:bg-purple-200 rounded-full p-0.5 transition-colors duration-200"
+          class="hover:bg-accent/20 rounded-full p-0.5 transition-colors duration-200"
         >
           <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -31,8 +31,10 @@
       <label
         v-for="option in options"
         :key="option.value"
-        class="relative flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-purple-300 transition-all duration-200"
-        :class="{ 'bg-purple-50 border-purple-400': isSelected(option.value) }"
+        class="relative flex items-start p-3 border rounded-lg cursor-pointer transition-all duration-200"
+        :class="isSelected(option.value) 
+          ? 'bg-accent/5 border-accent/40 hover:border-accent/60' 
+          : 'border-text/20 hover:bg-text/5 hover:border-text/30'"
       >
         <div class="flex items-center h-6">
           <input
@@ -41,14 +43,14 @@
             :value="option.value"
             :checked="isSelected(option.value)"
             @change="toggleOption(option)"
-            class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
+            class="h-4 w-4 rounded border-text/20 text-accent focus:ring-accent"
           />
         </div>
         <div class="ml-3 flex-1">
-          <span class="block text-sm font-medium text-gray-900">
+          <span class="block text-sm font-medium font-sans text-text">
             {{ option.label }}
           </span>
-          <span v-if="option.description" class="block text-xs text-gray-500 mt-0.5">
+          <span v-if="option.description" class="block text-xs text-text/50 font-sans mt-0.5">
             {{ option.description }}
           </span>
         </div>
@@ -56,12 +58,12 @@
     </div>
 
     <!-- Hint text -->
-    <p v-if="hint && !error" class="mt-2 text-sm text-gray-500">
+    <p v-if="hint && !error" class="mt-2 text-sm text-text/50 font-sans">
       {{ hint }}
     </p>
 
     <!-- Error message -->
-    <p v-if="error" class="mt-2 text-sm text-red-600">
+    <p v-if="error" class="mt-2 text-sm text-red-600 font-sans">
       {{ error }}
     </p>
   </div>

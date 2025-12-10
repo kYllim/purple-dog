@@ -1,122 +1,246 @@
 <template>
-  <div>
-    <Navbar />
+  <ParticulierLayout>
 
-    <!-- HERO -->
-    <section class="relative bg-gradient-to-br from-indigo-50 to-blue-100 py-20">
-      <div class="max-w-5xl mx-auto px-6 text-center">
-        <h1 class="text-5xl font-extrabold text-gray-900">
-          Votre Espace Particulier
-        </h1>
 
-        <p class="mt-4 text-gray-700 text-lg max-w-xl mx-auto">
-          Gérez vos objets, publiez de nouvelles ventes et suivez vos activités facilement.
-        </p>
+<!-- 🎨 HERO -->
+<section 
+  class="relative py-28 text-center text-white flex items-center justify-center"
+  :style="{
+    backgroundImage: `url('${heroBg}')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  }"
+>
+  <div class="absolute inset-0 bg-black/50"></div>
 
-        <!-- CTA BUTTON -->
-        <RouterLink
-          to="/particulier/vendre"
-          class="mt-8 inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-8 rounded-full shadow-lg text-lg font-semibold transition"
-        >
-          + Créer une nouvelle vente
-        </RouterLink>
-      </div>
+  <div class="relative max-w-4xl mx-auto px-6">
+    <h1 class="text-3xl md:text-6xl font-serif text-white mb-6 drop-shadow-2xl tracking-wide">
+      Bonjour {{ userName }} 👋
+    </h1>
 
-      <!-- Decorative blobs -->
-      <div class="absolute top-10 left-10 w-40 h-40 bg-white/50 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-10 right-10 w-56 h-56 bg-indigo-200/40 rounded-full blur-2xl"></div>
-    </section>
+    <p class="text-lg md:text-2xl text-gray-200 font-light tracking-widest uppercase mb-12">
+      Gérez vos objets, suivez vos ventes et publiez de nouvelles annonces.
+    </p>
 
-    <!-- MES OBJETS -->
-    <section class="py-16 bg-gray-50">
-      <div class="max-w-5xl mx-auto px-6">
-
-        <h2 class="text-3xl font-bold text-gray-900 mb-8">
-          Vos objets en vente
-        </h2>
-
-        <!-- Si aucun objet -->
-        <div
-          v-if="mesObjets.length === 0"
-          class="p-10 bg-white rounded-3xl shadow text-center text-gray-500"
-        >
-          Vous n’avez encore ajouté aucun objet à la vente.
-          <br />
-          <RouterLink
-            to="/particulier/vendre"
-            class="text-indigo-600 font-semibold hover:underline"
-          >
-            Ajouter mon premier objet →
-          </RouterLink>
-        </div>
-
-        <!-- Liste des objets -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-
-          <div
-            v-for="obj in mesObjets"
-            :key="obj.id"
-            class="bg-white p-6 rounded-3xl shadow hover:shadow-lg transition"
-          >
-            <img
-              :src="obj.image"
-              class="w-full h-48 object-cover rounded-2xl mb-4"
-              alt="objet"
-            />
-
-            <h3 class="text-xl font-bold text-gray-800">
-              {{ obj.nom }}
-            </h3>
-
-            <p class="text-gray-600 mt-1 line-clamp-2">
-              {{ obj.description }}
-            </p>
-
-            <div class="mt-4 font-semibold text-indigo-600">
-              {{ obj.prix }} €
-            </div>
-
-            <RouterLink
-              :to="`/dashboard/particulier/mes-objets/${obj.id}`"
-              class="mt-3 inline-block text-sm text-gray-500 hover:text-gray-700 hover:underline"
-            >
-              Voir détails →
-            </RouterLink>
-          </div>
-
-        </div>
-      </div>
-    </section>
+    <!-- Bouton qui ouvre le modal -->
+    <button
+      @click="showModal = true"
+      class="mt-10 inline-block bg-accent hover:bg-[#b08d4d] text-white text-sm font-bold uppercase tracking-widest py-4 px-10 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
+    >
+      + Créer une vente
+    </button>
   </div>
+</section>
+
+<!-- MODAL FLOTTANT AVEC WIZARD INTÉGRÉ -->
+<transition name="fade">
+  <div
+    v-if="showModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+  >
+    <!-- Fermeture flottante -->
+    <button
+      class="absolute top-8 right-8 text-white text-2xl font-bold hover:text-accent z-50"
+      @click="showModal = false"
+    >
+      ✕
+    </button>
+
+    <!-- Contenu du Wizard directement dans le modal -->
+    <div class="relative w-full max-w-3xl">
+
+      <!-- Header du Wizard -->
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-serif text-text">{{ wizardTitle }}</h1>
+        <p v-if="wizardSubtitle" class="mt-2 text-sm text-text/60 font-sans">{{ wizardSubtitle }}</p>
+      </div>
+
+      <!-- Barre de progression -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-2">
+          <span
+            v-for="(stepLabel, index) in steps"
+            :key="index"
+            class="text-sm font-medium font-sans"
+            :class="currentStep > index ? 'text-accent' : 'text-text/30'"
+          >
+            Étape {{ index + 1 }}
+          </span>
+        </div>
+        <div class="w-full bg-text/10 rounded-full h-2">
+          <div
+            class="bg-accent h-2 rounded-full transition-all duration-300"
+            :style="{ width: `${(currentStep / steps.length) * 100}%` }"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Étapes du Wizard -->
+      <transition name="fade">
+  <div
+    v-if="showModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+  >
+    <!-- Bouton de fermeture -->
+    <button
+      class="absolute top-8 right-8 text-white text-2xl font-bold hover:text-accent z-50"
+      @click="showModal = false"
+    >
+      ✕
+    </button>
+
+<transition name="fade">
+  <div
+    v-if="showModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+  >
+    <!-- Bouton de fermeture -->
+    <button
+      class="absolute top-8 right-8 text-white text-2xl font-bold hover:text-accent z-50"
+      @click="showModal = false"
+    >
+      ✕
+    </button>
+
+
+<!-- Wizard avec fond blanc pour lisibilité -->
+<div class="relative w-full max-w-3xl bg-white rounded-2xl p-6 shadow-xl">
+  <!-- Barre de progression -->
+  <div class="mb-6">
+    <div class="flex justify-between items-center mb-2">
+      <span
+        v-for="(stepLabel, index) in steps"
+        :key="index"
+        class="text-sm font-medium font-sans"
+        :class="currentStep > index ? 'text-accent' : 'text-text/30'"
+      >
+        Étape {{ index + 1 }}
+      </span>
+    </div>
+    <div class="w-full bg-text/10 rounded-full h-2">
+      <div
+        class="bg-accent h-2 rounded-full transition-all duration-300"
+        :style="{ width: `${(currentStep / steps.length) * 100}%` }"
+      ></div>
+    </div>
+  </div>
+
+  <!-- Wizard Steps -->
+  <VendreObjetStep1
+    v-if="currentStep === 1"
+    :model-value="form"
+    @update:modelValue="val => Object.assign(form, val)"
+    @next="goNext"
+  />
+  <VendreObjetStep2
+    v-if="currentStep === 2"
+    :model-value="form"
+    @update:modelValue="val => Object.assign(form, val)"
+    @back="goBack"
+    @next="goNext"
+  />
+  <VendreObjetStep3
+    v-if="currentStep === 3"
+    :model-value="form"
+    @update:modelValue="val => Object.assign(form, val)"
+    @back="goBack"
+    @submit="submitForm"
+  />
+</div>
+```
+
+  </div>
+</transition>
+
+```
+
+  </div>
+</transition>
+
+
+    </div>
+  </div>
+</transition>
+
+<!-- 🌟 MES OBJETS -->
+<section class="py-20 bg-background text-text">
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="text-3xl font-bold uppercase tracking-widest mb-4">
+      Vos objets en vente
+    </h2>
+
+    <p class="text-gray-500 text-sm uppercase tracking-widest mb-12">
+      Retrouvez ici tous les objets que vous avez publiés.
+    </p>
+
+    <div
+      v-if="mesObjets.length === 0"
+      class="p-12 bg-white rounded-3xl shadow text-center text-gray-500"
+    >
+      Vous n’avez pas encore mis d’objet en vente.
+    </div>
+  </div>
+</section>
+```
+
+  </ParticulierLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import Navbar from "../../components/layout/NavBar.vue";
+import { ref, reactive, onMounted } from "vue";
+import ParticulierLayout from "../../layouts/ParticulierLayout.vue";
+import VendreObjetStep1 from "../../components/objet/steps/VendreObjetStep1.vue";
+import VendreObjetStep2 from "../../components/objet/steps/VendreObjetStep2.vue";
+import VendreObjetStep3 from "../../components/objet/steps/VendreObjetStep3.vue";
 
-// ⛔ En vrai tu vas fetch depuis ton backend
+const heroBg = "/src/assets/img/illustration.jpg";
+const userName = "Utilisateur";
 const mesObjets = ref([]);
+const showModal = ref(false);
+const currentStep = ref(1);
 
-// Exemple test pour voir le rendu
+const wizardTitle = "Création d'une vente";
+const wizardSubtitle = "Publiez votre objet en toute simplicité";
+
+const steps = ["Infos générales", "Description", "Prix et livraison"];
+
+const form = reactive({
+  titre: "",
+  categorie_id: null,
+  type: "",
+  quantite: 1,
+  photos: [],
+  description: "",
+  dimensions: { longueur: "", largeur: "", hauteur: "", unite: "cm" },
+  poids_kg: "",
+  type_vente: "",
+  prix_souhaite: "",
+  prix_depart: "",
+  prix_achat_immediat: ""
+});
+
+const goNext = () => {
+  if (currentStep.value < 3) currentStep.value++;
+};
+const goBack = () => {
+  if (currentStep.value > 1) currentStep.value--;
+};
+const submitForm = () => {
+  console.log("Objet publié :", form);
+  alert("Objet publié !");
+  showModal.value = false; // fermeture automatique
+};
+
 onMounted(() => {
-  // Simule quelques objets pour le design
-  mesObjets.value = [
-    {
-      id: 1,
-      nom: "Lampe vintage en cuivre",
-      description: "Très bon état, fonctionne parfaitement.",
-      prix: 45,
-      image:
-        "https://images.unsplash.com/photo-1503602642458-232111445657?q=80&w=800",
-    },
-    {
-      id: 2,
-      nom: "Chaise scandinave",
-      description: "Bois clair, excellent état.",
-      prix: 89,
-      image:
-        "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800",
-    },
-  ];
+  mesObjets.value = [];
 });
 </script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>

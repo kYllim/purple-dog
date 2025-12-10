@@ -1,74 +1,87 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-background flex items-center justify-center p-4 py-12">
+    <div class="w-full max-w-2xl relative">
+      <!-- Card -->
+      <div class="bg-white rounded-2xl shadow-xl p-8 border border-accent/10">
 
-    <div class="max-w-4xl mx-auto px-4 py-10">
-
-      <!-- Wizard Header -->
-      <div class="flex items-center justify-between mb-10 border-b pb-4">
-        <div
-          v-for="(stepLabel, index) in steps"
-          :key="index"
-          class="flex-1 text-center cursor-pointer"
-          @click="goToStep(index)"
+        <!-- Fermeture modal -->
+        <button
+          @click="$emit('close')"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg"
         >
-          <div
-            class="font-semibold text-lg"
-            :class="currentStep === index ? 'text-black' : 'text-gray-400'"
-          >
-            {{ stepLabel }}
-          </div>
+          ✕
+        </button>
 
-          <div class="h-1 mt-2"
-               :class="currentStep === index ? 'bg-black' : 'bg-gray-200'">
+        <!-- Header -->
+        <div class="text-center mb-6">
+          <h1 class="text-3xl font-serif text-text">{{ title }}</h1>
+          <p v-if="subtitle" class="mt-2 text-sm text-text/60 font-sans">{{ subtitle }}</p>
+        </div>
+
+        <!-- Barre de progression des étapes -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-2">
+            <span
+              v-for="(stepLabel, index) in steps"
+              :key="index"
+              class="text-sm font-medium font-sans"
+              :class="currentStep > index ? 'text-accent' : 'text-text/30'"
+            >
+              Étape {{ index + 1 }}
+            </span>
+          </div>
+          <div class="w-full bg-text/10 rounded-full h-2">
+            <div
+              class="bg-accent h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${((currentStep) / steps.length) * 100}%` }"
+            ></div>
           </div>
         </div>
+
+        <!-- Wizard Steps -->
+        <div class="space-y-6">
+          <VendreObjetStep1
+            v-if="currentStep === 1"
+            :model-value="form"
+            @update:modelValue="val => Object.assign(form, val)"
+            @next="goNext"
+          />
+
+          <VendreObjetStep2
+            v-if="currentStep === 2"
+            :model-value="form"
+            @update:modelValue="val => Object.assign(form, val)"
+            @back="goBack"
+            @next="goNext"
+          />
+
+          <VendreObjetStep3
+            v-if="currentStep === 3"
+            :model-value="form"
+            @update:modelValue="val => Object.assign(form, val)"
+            @back="goBack"
+            @submit="submitForm"
+          />
+        </div>
+
       </div>
-
-      <!-- Étapes -->
-      <div>
-        <VendreObjetStep1
-          v-if="currentStep === 0"
-          v-model="form"
-          @next="goToStep(1)"
-        />
-
-        <VendreObjetStep2
-          v-if="currentStep === 1"
-          v-model="form"
-          @next="goToStep(2)"
-          @back="goToStep(0)"
-        />
-
-        <VendreObjetStep3
-          v-if="currentStep === 2"
-          v-model="form"
-          @back="goToStep(1)"
-          @submit="submitForm"
-        />
-      </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref } from "vue";
-
+import { useRouter } from 'vue-router';
 import VendreObjetStep1 from "./steps/VendreObjetStep1.vue";
 import VendreObjetStep2 from "./steps/VendreObjetStep2.vue";
 import VendreObjetStep3 from "./steps/VendreObjetStep3.vue";
 
-const steps = [
-  "Infos générales (1/3)",
-  "Description (2/3)",
-  "Prix et livraison (3/3)"
-];
+const router = useRouter();
+const currentStep = ref(1);
+const title = "Création d'une vente";
+const subtitle = "Publiez votre objet en toute simplicité";
 
-const currentStep = ref(0);
-
-const goToStep = (step) => {
-  currentStep.value = step;
-};
+const steps = ["Infos générales", "Description", "Prix et livraison"];
 
 const form = reactive({
   titre: "",
@@ -85,8 +98,15 @@ const form = reactive({
   prix_achat_immediat: ""
 });
 
+const goNext = () => {
+  if (currentStep.value < 3) currentStep.value++;
+};
+const goBack = () => {
+  if (currentStep.value > 1) currentStep.value--;
+};
+
 const submitForm = () => {
-  console.log("Soumission finale :", form);
+  console.log("Objet publié :", form);
   alert("Objet publié !");
 };
 </script>

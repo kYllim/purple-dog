@@ -3,23 +3,23 @@
 
     <!-- NOM DU PRODUIT -->
     <div>
-      <label class="block font-medium text-gray-800 mb-2">Nom du produit *</label>
+      <label class="block font-sans text-text mb-2">Nom du produit *</label>
       <input
         v-model="localForm.titre"
         type="text"
         maxlength="75"
-        class="w-full border rounded-lg px-4 py-3"
+        class="w-full border rounded-lg px-4 py-3 text-text font-sans focus:ring-accent focus:border-accent"
         placeholder="Ex : Montre Omega vintage"
       />
-      <p class="text-right text-xs text-gray-400">{{ localForm.titre.length }}/75</p>
+      <p class="text-right text-xs text-text/50 font-sans">{{ localForm.titre.length }}/75</p>
     </div>
 
     <!-- Catégorie -->
     <div>
-      <label class="block font-medium text-gray-800 mb-2">Catégorie *</label>
+      <label class="block font-sans text-text mb-2">Catégorie *</label>
       <select
         v-model="localForm.categorie_id"
-        class="w-full border rounded-lg px-4 py-3"
+        class="w-full border rounded-lg px-4 py-3 text-text font-sans focus:ring-accent focus:border-accent"
       >
         <option disabled value="">Renseigner une catégorie</option>
         <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -28,13 +28,12 @@
       </select>
     </div>
 
-    
     <!-- Quantité -->
     <div>
-      <label class="block font-medium text-gray-800 mb-2">Quantité *</label>
+      <label class="block font-sans text-text mb-2">Quantité *</label>
       <select
         v-model="localForm.quantite"
-        class="w-full border rounded-lg px-4 py-3"
+        class="w-full border rounded-lg px-4 py-3 text-text font-sans focus:ring-accent focus:border-accent"
       >
         <option disabled value="">Sélectionner une quantité</option>
         <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
@@ -43,15 +42,14 @@
 
     <!-- Photos -->
     <div>
-      <label class="block font-medium text-gray-800 mb-4">
+      <label class="block font-sans text-text mb-4">
         Photos du produit (min. 2)
       </label>
 
       <div class="grid grid-cols-3 sm:grid-cols-5 gap-4">
-
         <!-- Ajouter -->
         <label
-          class="border-2 border-dashed rounded-lg h-28 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50"
+          class="border-2 border-dashed rounded-lg h-28 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 font-sans text-text"
         >
           <span class="text-3xl">+</span>
           <span class="text-sm">Ajouter</span>
@@ -66,13 +64,12 @@
         >
           <img :src="photo.preview" class="h-full w-full object-cover" />
         </div>
-
       </div>
     </div>
 
     <!-- CTA -->
     <button
-      class="w-full bg-black text-white py-3 rounded-lg text-lg font-semibold mt-6"
+      class="w-full bg-accent text-white font-sans uppercase tracking-widest py-4 px-10 rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all mt-6"
       @click="$emit('next')"
     >
       Passer à l’étape 2/3 →

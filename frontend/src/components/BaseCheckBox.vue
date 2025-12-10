@@ -9,12 +9,12 @@
         :required="required"
         :disabled="disabled"
         @change="$emit('update:modelValue', $event.target.checked)"
-        class="h-5 w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-600 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+        class="h-5 w-5 rounded border-text/20 text-accent focus:ring-accent transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       />
     </div>
     
     <div class="ml-3 flex-1">
-      <label :for="checkboxId" class="text-sm text-gray-700 cursor-pointer">
+      <label :for="checkboxId" class="text-sm text-text font-sans cursor-pointer">
         {{ label }}
         <span v-if="required" class="text-red-500 ml-1">*</span>
       </label>
@@ -24,13 +24,13 @@
         v-if="link" 
         :href="link" 
         target="_blank"
-        class="ml-2 text-sm text-purple-600 hover:text-purple-700 underline"
+        class="ml-2 text-sm text-accent hover:text-accent/80 underline transition-colors"
       >
         {{ linkText || 'En savoir plus' }}
       </a>
       
       <!-- Error message -->
-      <p v-if="error" class="mt-1 text-sm text-red-600">
+      <p v-if="error" class="mt-1 text-sm text-red-600 font-sans">
         {{ error }}
       </p>
     </div>

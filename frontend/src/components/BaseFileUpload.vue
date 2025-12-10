@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <!-- Label -->
-    <label v-if="label" class="block text-sm font-medium text-gray-700 mb-2">
+    <label v-if="label" class="block text-sm font-medium text-text/70 mb-2 font-sans">
       {{ label }}
       <span v-if="required" class="text-red-500 ml-1">*</span>
     </label>
@@ -36,10 +36,10 @@
         
         <!-- Preview fichier PDF/autre -->
         <div v-else class="flex flex-col items-center">
-          <svg class="h-16 w-16 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="h-16 w-16 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p class="mt-2 text-sm font-medium text-gray-700">{{ fileName }}</p>
+          <p class="mt-2 text-sm font-medium font-sans text-text">{{ fileName }}</p>
         </div>
 
         <!-- Bouton supprimer -->
@@ -56,28 +56,28 @@
 
       <!-- Placeholder si pas de fichier -->
       <div v-else class="text-center">
-        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+        <svg class="mx-auto h-12 w-12 text-text/40" stroke="currentColor" fill="none" viewBox="0 0 48 48">
           <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <div class="mt-4 flex text-sm text-gray-600">
-          <span class="relative cursor-pointer rounded-md font-medium text-purple-600 hover:text-purple-500">
+        <div class="mt-4 flex text-sm text-text/60 font-sans justify-center">
+          <span class="relative cursor-pointer rounded-md font-medium text-accent hover:text-accent/80">
             Choisir un fichier
           </span>
           <p class="pl-1">ou glisser-déposer</p>
         </div>
-        <p class="text-xs text-gray-500 mt-1">
+        <p class="text-xs text-text/40 font-sans mt-1">
           {{ accept }} - Maximum {{ maxSizeMB }}MB
         </p>
       </div>
     </div>
 
     <!-- Hint text -->
-    <p v-if="hint && !error" class="mt-2 text-sm text-gray-500">
+    <p v-if="hint && !error" class="mt-2 text-sm text-text/50 font-sans">
       {{ hint }}
     </p>
 
     <!-- Error message -->
-    <p v-if="error" class="mt-2 text-sm text-red-600">
+    <p v-if="error" class="mt-2 text-sm text-red-600 font-sans">
       {{ error }}
     </p>
   </div>
@@ -134,8 +134,8 @@ const isImage = computed(() => {
 
 const uploadZoneClasses = computed(() => {
   const base = 'relative border-2 border-dashed rounded-lg p-6 cursor-pointer transition-all duration-200';
-  const hover = 'hover:border-purple-400 hover:bg-purple-50';
-  const dragging = isDragging.value ? 'border-purple-500 bg-purple-50' : 'border-gray-300';
+  const hover = 'hover:border-accent/60 hover:bg-accent/5';
+  const dragging = isDragging.value ? 'border-accent bg-accent/5' : 'border-text/20';
   const errorClass = props.error ? 'border-red-300 bg-red-50' : '';
   
   return `${base} ${hover} ${dragging} ${errorClass}`;

@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center p-4 py-12">
+  <div class="min-h-screen bg-background flex items-center justify-center p-4 py-12">
     <div class="w-full" :class="containerClass">
       <!-- Card -->
-      <div class="bg-white rounded-2xl shadow-2xl p-8">
+      <div class="bg-white rounded-2xl shadow-xl p-8 border border-accent/10">
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
-          <p v-if="subtitle" class="mt-2 text-sm text-gray-600">{{ subtitle }}</p>
+          <h1 class="text-3xl font-serif text-text">{{ title }}</h1>
+          <p v-if="subtitle" class="mt-2 text-sm text-text/60 font-sans">{{ subtitle }}</p>
         </div>
 
         <!-- Form -->
@@ -18,7 +18,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium font-sans text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             <span v-if="!loading">{{ submitText }}</span>
             <span v-else class="flex items-center">
@@ -64,7 +64,7 @@ const props = defineProps({
   },
   maxWidth: {
     type: String,
-    default: 'md', // 'sm', 'md', 'lg', 'xl', '2xl', '3xl'
+    default: 'md',
     validator: (value) => ['sm', 'md', 'lg', 'xl', '2xl', '3xl'].includes(value)
   }
 });
