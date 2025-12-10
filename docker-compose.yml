@@ -8,6 +8,13 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:password@postgres:5432/purple_dog
+      - JWT_SECRET=supersecretkey
+      - PORT=3000
+      - FRONTEND_URL=http://localhost:5173
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=jackmbappekoum@gmail.com
+      - SMTP_PASS=mvrsusvhqwblxthb
     depends_on:
       - postgres
     volumes:
