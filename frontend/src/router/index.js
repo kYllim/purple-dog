@@ -19,6 +19,8 @@ import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
 
+import MyObjects from '../pages/MyObjects.vue';
+import Objects from '../pages/Objects.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -43,19 +45,25 @@ const routes = [
     ]
   },
   {
-    path: '/favorites',
-    name: 'Favorites',
-    component: Favorite,
-    meta: { requiresAuth: true, requiresRole: 'PRO' }
+    path: '/favorites',name: 'Favorites', component: Favorite, meta: { requiresAuth: true, requiresRole: 'PRO' }
   },
 
   {
-    path: '/history',
-    name: 'History',
-    component: History,
-    meta: { requiresAuth: true, requiresRole: 'PRO' }
+    path: '/history', name: 'History', component: History, meta: { requiresAuth: true, requiresRole: 'PRO' }
   },
 
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/register', name: 'Register', component: Register },
+{
+  path: '/objects',
+  name: 'Objects',
+  component: Objects  // Tous les objets
+},
+{
+  path: '/my-objects',
+  name: 'MyObjects',
+  component: MyObjects  // Mes objets avec onglets
+},
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
 
