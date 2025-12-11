@@ -382,6 +382,9 @@ const faireOffre = async (req, res) => {
 
 const obtenirMesEncheresParticipees = async (req, res) => {
   try {
+    if (!req.utilisateur || !req.utilisateur.id) {
+      return res.status(401).json({ error: "Utilisateur non authentifié" });
+    }
     const userId = req.utilisateur.id;
 
     const requete = `

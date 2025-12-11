@@ -15,7 +15,7 @@
         </BaseButton>
       </div>
 
-      <!-- VUE TABLEAU (Desktop) -->
+
       <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <table class="w-full text-left border-collapse">
           <thead class="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
@@ -38,7 +38,7 @@
                     <span v-if="u.est_bloque" class="ml-2 text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold uppercase">BLACKLISTÉ</span>
                 </div>
                 
-                <!-- Identification fusionnée -->
+
                 <div v-if="u.role === 'PRO'" class="text-sm text-slate-600 mt-0.5">
                    <span class="font-medium" v-if="u.nom_entreprise">{{ u.nom_entreprise }}</span>
                    <span class="text-xs text-slate-400 ml-1" v-if="u.siret">(SIRET: {{ u.siret }})</span>
@@ -76,11 +76,11 @@
         </table>
       </div>
 
-      <!-- VUE CARTES (Mobile) -->
+
       <div class="md:hidden space-y-4">
         <div v-for="u in utilisateurs" :key="u.id" :class="['bg-white p-4 rounded-xl shadow-sm border border-slate-100 relative', u.est_bloque ? 'bg-slate-50 grayscale opacity-75' : '']">
             
-            <!-- Header Carte -->
+
             <div class="flex justify-between items-start mb-3">
                 <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', u.role === 'PRO' ? 'bg-[#0F172A] text-[#C5A059]' : 'bg-slate-100 text-slate-600']">
                   {{ u.role }}
@@ -95,12 +95,12 @@
                 </div>
             </div>
 
-            <!-- Contenu Carte -->
+
             <div class="mb-3">
                 <div class="font-bold text-slate-800 text-lg break-words">
                     {{ u.email }}
                 </div>
-                <!-- Identification fusionnée Mobile -->
+
                 <div v-if="u.role === 'PRO'" class="text-sm text-slate-600 mt-1">
                    <span class="font-medium block" v-if="u.nom_entreprise">{{ u.nom_entreprise }}</span>
                    <span class="text-xs text-slate-400" v-if="u.siret">SIRET: {{ u.siret }}</span>
@@ -111,9 +111,9 @@
                 <div class="text-xs text-slate-400 mt-1 font-mono">ID: {{ u.id.substring(0,8) }}...</div>
             </div>
 
-            <!-- Footer Carte (Actions + Badges) -->
+
             <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-50">
-                <!-- Bouton Blacklist Mobile -->
+
                  <button v-if="u.role === 'PARTICULIER'" @click="ouvrirModaleBlacklist(u)" 
                     :class="['flex-1 py-1.5 px-3 rounded-lg text-xs font-bold text-center border', u.est_bloque ? 'border-green-200 text-green-700 bg-green-50' : 'border-slate-200 text-slate-600 bg-slate-50']">
                     {{ u.est_bloque ? '✅ DÉBLOQUER' : '🚫 BLACKLISTER' }}
@@ -173,7 +173,7 @@
              <BaseInput v-model="form.code_postal" label="Code Postal" />
              <BaseInput v-model="form.pays" label="Pays" />
 
-             <!-- Cases à cocher supprimées ici (Lecture seule uniquement, voir tableau) -->
+
           </div>
 
           <div v-if="form.role === 'PARTICULIER'" class="border-t border-slate-100 pt-4 mt-4">
@@ -184,7 +184,7 @@
                 <BaseInput v-model.number="form.age" type="number" label="Âge" />
                 <BaseInput v-model="form.photo_profil_url" label="URL Photo Profil" class="col-span-2 md:col-span-1" />
                 
-                <!-- Identité vérifiée en lecture seule uniquement -->
+
              </div>
           </div>
 
@@ -219,7 +219,7 @@
 
   </div>
 
-     <!-- Modale Suppression -->
+
      <div v-if="modaleSuppressionOuverte" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
          
@@ -255,7 +255,7 @@
        </div>
      </div>
  
-     <!-- Modale Blacklist -->
+
      <div v-if="modaleBlacklistOuverte" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
          
@@ -299,6 +299,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import BaseButton from '../../components/BaseButton.vue' 
 import BaseInput from '../../components/BaseInput.vue'
+import serviceAdmin from '../../services/adminService'
 
 const utilisateurs = ref([])
 const modaleOuverte = ref(false)
@@ -309,8 +310,6 @@ const utilisateurABlacklister = ref(null)
 const enEdition = ref(false)
 const chargement = ref(false)
 
-const API_URL = 'http://localhost:3000/admin'
-
 const form = reactive({
   id: null,
   role: 'PARTICULIER',
@@ -320,17 +319,17 @@ const form = reactive({
   ville: '',
   code_postal: '',
   pays: '',
-  // Lecture seule pour ces champs désormais
+
   email_verifie: false,
   newsletter_acceptee: false,
   est_bloque: false,
-  // Particulier
+
   prenom: '',
   nom: '',
   age: '',
   photo_profil_url: '',
   identite_verifiee: false,
-  // Pro
+
   nom_entreprise: '',
   siret: '',
   site_web: '',
@@ -341,14 +340,11 @@ const form = reactive({
 
 const chargerUtilisateurs = async () => {
   try {
-    const res = await fetch(`${API_URL}/utilisateurs`)
-    if(res.ok) {
-        utilisateurs.value = await res.json()
-    } else {
-        alert('Erreur chargement utilisateurs')
-    }
+    const res = await serviceAdmin.recupererUtilisateurs()
+    utilisateurs.value = res.data
   } catch (e) {
     console.error('Erreur réseau', e)
+    alert('Erreur chargement utilisateurs')
   }
 }
 
@@ -365,8 +361,8 @@ const ouvrirModaleCreation = () => {
 
 const editerUtilisateur = async (u) => {
     try {
-        const res = await fetch(`${API_URL}/utilisateurs/${u.id}`)
-        const details = await res.json()
+        const res = await serviceAdmin.recupererUtilisateur(u.id)
+        const details = res.data
         enEdition.value = true
         modaleOuverte.value = true
         
@@ -403,29 +399,22 @@ const editerUtilisateur = async (u) => {
 const soumettreFormulaire = async () => {
   chargement.value = true
   try {
-    const url = enEdition.value ? `${API_URL}/utilisateurs/${form.id}` : `${API_URL}/utilisateurs`
-    const method = enEdition.value ? 'PUT' : 'POST'
     const payload = { ...form }
     
-    // Si pas de mdp en édition, on l'enlève pour pas écraser avec vide
+
     if(enEdition.value && !payload.password) delete payload.password 
     if(!enEdition.value && !payload.password) { alert('Mot de passe obligatoire'); chargement.value=false; return; } 
 
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-
-    if(res.ok) {
-        modaleOuverte.value = false
-        chargerUtilisateurs()
+    if (enEdition.value) {
+        await serviceAdmin.modifierUtilisateur(form.id, payload)
     } else {
-        const err = await res.json()
-        alert('Erreur: ' + JSON.stringify(err))
+        await serviceAdmin.creerUtilisateur(payload)
     }
+
+    modaleOuverte.value = false
+    chargerUtilisateurs()
   } catch (e) {
-      alert("Erreur système")
+      alert("Erreur: " + e.response?.data?.error || "Erreur système")
   } finally {
       chargement.value = false
   }
@@ -440,14 +429,11 @@ const effectuerSuppression = async () => {
     if (!utilisateurASupprimer.value) return
     chargement.value = true
     try {
-        const res = await fetch(`${API_URL}/utilisateurs/${utilisateurASupprimer.value.id}`, { method: 'DELETE' })
-        if(res.ok) {
-            chargerUtilisateurs()
-            modaleSuppressionOuverte.value = false
-        }
-        else alert('Erreur suppression')
+        await serviceAdmin.supprimerUtilisateur(utilisateurASupprimer.value.id)
+        chargerUtilisateurs()
+        modaleSuppressionOuverte.value = false
     } catch(e) {
-        alert('Erreur réseau')
+        alert('Erreur suppression')
     } finally {
         chargement.value = false
         utilisateurASupprimer.value = null
@@ -466,23 +452,15 @@ const effectuerBlacklist = async () => {
     const u = utilisateurABlacklister.value
     
     try {
-        const resDetail = await fetch(`${API_URL}/utilisateurs/${u.id}`)
-        const fullUser = await resDetail.json()
+        const resDetail = await serviceAdmin.recupererUtilisateur(u.id)
+        const fullUser = resDetail.data
         
         fullUser.est_bloque = !fullUser.est_bloque
         
-        const res = await fetch(`${API_URL}/utilisateurs/${u.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fullUser)
-        })
+        await serviceAdmin.modifierUtilisateur(u.id, fullUser)
         
-        if(res.ok) {
-            chargerUtilisateurs()
-            modaleBlacklistOuverte.value = false
-        } else {
-            alert("Erreur blacklist")
-        }
+        chargerUtilisateurs()
+        modaleBlacklistOuverte.value = false
     } catch(e) {
         alert("Erreur connectivité")
     } finally {

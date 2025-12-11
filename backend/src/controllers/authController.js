@@ -8,7 +8,7 @@ const emailService = require('../services/emailService');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
-// Générer un token aléatoire
+
 const generateToken = () => {
     return crypto.randomBytes(32).toString('hex');
 };
@@ -196,7 +196,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// Vérifier l'email avec le token
+
 exports.verifyEmail = async (req, res) => {
     try {
         const { token } = req.body;
@@ -236,7 +236,7 @@ exports.verifyEmail = async (req, res) => {
     }
 };
 
-// Demander la réinitialisation du mot de passe
+
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -247,7 +247,7 @@ exports.forgotPassword = async (req, res) => {
 
         const result = await pool.query('SELECT * FROM UTILISATEURS WHERE email = $1', [email]);
 
-        // Toujours retourner un succès pour ne pas révéler si l'email existe
+
         if (result.rows.length === 0) {
             return res.json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
         }
@@ -305,15 +305,15 @@ exports.resetPassword = async (req, res) => {
 
         const user = result.rows[0];
 
-        // Vérifier si le token a expiré
+
         if (new Date() > new Date(user.token_reset_password_expire)) {
             return res.status(400).json({ error: 'Token expiré' });
         }
 
-        // Hasher le nouveau mot de passe
+
         const hash = await bcrypt.hash(newPassword, 10);
 
-        // Mettre à jour le mot de passe
+
         await pool.query(
             `UPDATE UTILISATEURS 
              SET mot_de_passe_hash = $1, token_reset_password = NULL, token_reset_password_expire = NULL 
@@ -329,7 +329,7 @@ exports.resetPassword = async (req, res) => {
 
 };
 
-// Récupérer le profil de l'utilisateur connecté
+
 exports.getProfile = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -356,7 +356,7 @@ exports.getProfile = async (req, res) => {
             pays: user.pays
         };
 
-        // Récupérer les détails spécifiques selon le rôle
+
         if (userRole === 'PARTICULIER') {
             const detailsResult = await pool.query(
                 'SELECT prenom, nom, age, photo_profil_url FROM DETAILS_PARTICULIER WHERE utilisateur_id = $1',
@@ -399,13 +399,13 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-// Mettre à jour le profil de l'utilisateur connecté
+
 exports.updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
-        const { 
-            email, adresse, ville, code_postal, pays, 
+        const {
+            email, adresse, ville, code_postal, pays,
             prenom, nom, photo_profil_url,
             nom_entreprise, siret, kbis_url, site_web, specialites
         } = req.body;
@@ -428,7 +428,7 @@ exports.updateProfile = async (req, res) => {
                 }
             }
 
-            // Mettre à jour les informations de base
+
             await client.query(
                 `UPDATE UTILISATEURS 
                  SET email = COALESCE($1, email),
@@ -441,7 +441,7 @@ exports.updateProfile = async (req, res) => {
                 [email, adresse, ville, code_postal, pays, userId]
             );
 
-            // Mettre à jour les détails spécifiques selon le rôle
+
             if (userRole === 'PARTICULIER') {
                 await client.query(
                     `UPDATE DETAILS_PARTICULIER 

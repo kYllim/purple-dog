@@ -16,6 +16,7 @@ import VendreObjet from "../pages/particulier/VendreObjet.vue";
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 import AdminUsers from '../pages/admin/Users.vue';
+import AdminObjects from '../pages/admin/AdminObjects.vue';
 import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
@@ -47,7 +48,8 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'ADMIN' },
     children: [
       { path: '', name: 'AdminDashboard', component: AdminDashboard },
-      { path: 'users', name: 'AdminUsers', component: AdminUsers }
+      { path: 'users', name: 'AdminUsers', component: AdminUsers },
+      { path: 'objets', name: 'AdminObjects', component: AdminObjects }
     ]
   },
 
