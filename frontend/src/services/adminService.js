@@ -29,6 +29,10 @@ const serviceAdmin = {
 
     async supprimerObjet(id) {
         return api.delete(`/admin/objets/${id}`);
+    },
+
+    async recupererFinance() {
+        return api.get('/admin/finance');
     }
 };
 

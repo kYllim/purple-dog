@@ -17,6 +17,7 @@ import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 import AdminUsers from '../pages/admin/Users.vue';
 import AdminObjects from '../pages/admin/AdminObjects.vue';
+import AdminFinance from '../pages/admin/AdminFinance.vue';
 import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
@@ -49,7 +50,8 @@ const routes = [
     children: [
       { path: '', name: 'AdminDashboard', component: AdminDashboard },
       { path: 'users', name: 'AdminUsers', component: AdminUsers },
-      { path: 'objets', name: 'AdminObjects', component: AdminObjects }
+      { path: 'objets', name: 'AdminObjects', component: AdminObjects },
+      { path: 'finance', name: 'AdminFinance', component: AdminFinance }
     ]
   },
 
