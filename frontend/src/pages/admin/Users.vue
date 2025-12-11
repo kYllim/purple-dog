@@ -61,8 +61,8 @@
               </td>
               <td class="p-4 text-right">
                 <div class="flex justify-end gap-2 opacity-15 group-hover:opacity-100 transition-opacity">
-                   <button v-if="u.role === 'PARTICULIER' && !u.est_bloque" @click="ouvrirModaleBlacklist(u)" class="text-slate-500 hover:bg-slate-100 p-2 rounded-full font-bold text-xs" title="Blacklister">🚫</button>
-                   <button v-if="u.role === 'PARTICULIER' && u.est_bloque" @click="ouvrirModaleBlacklist(u)" class="text-green-600 hover:bg-green-50 p-2 rounded-full font-bold text-xs" title="Débloquer">✅</button>
+                   <button v-if="u.role === 'PRO' && !u.est_bloque" @click="ouvrirModaleBlacklist(u)" class="text-slate-500 hover:bg-slate-100 p-2 rounded-full font-bold text-xs" title="Blacklister">🚫</button>
+                   <button v-if="u.role === 'PRO' && u.est_bloque" @click="ouvrirModaleBlacklist(u)" class="text-green-600 hover:bg-green-50 p-2 rounded-full font-bold text-xs" title="Débloquer">✅</button>
                    
                   <button @click="editerUtilisateur(u)" class="text-blue-600 hover:bg-blue-50 p-2 rounded-full font-bold text-xs">Modif.</button>
                   <button @click="confirmerSuppression(u)" class="text-red-500 hover:bg-red-50 p-2 rounded-full font-bold text-xs">Suppr.</button>
@@ -114,7 +114,7 @@
 
             <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-50">
 
-                 <button v-if="u.role === 'PARTICULIER'" @click="ouvrirModaleBlacklist(u)" 
+                 <button v-if="u.role === 'PRO'" @click="ouvrirModaleBlacklist(u)" 
                     :class="['flex-1 py-1.5 px-3 rounded-lg text-xs font-bold text-center border', u.est_bloque ? 'border-green-200 text-green-700 bg-green-50' : 'border-slate-200 text-slate-600 bg-slate-50']">
                     {{ u.est_bloque ? '✅ DÉBLOQUER' : '🚫 BLACKLISTER' }}
                  </button>
