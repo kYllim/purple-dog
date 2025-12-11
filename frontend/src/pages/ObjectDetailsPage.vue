@@ -106,6 +106,20 @@
                   
                   <!-- Reassurance / Trust Signals -->
                   <div class="text-center space-y-4 pt-8 opacity-70">
+                      
+                      <!-- Bouton Achat Immédiat (Si vente directe + connecté) -->
+                      <div v-if="!item.enchere && (item.type_vente === 'INSTANTANE' || item.type_vente === 'ACHAT_IMMEDIAT') && item.statut === 'PUBLIE'" class="pb-4 border-b border-gray-200 mb-4">
+                          <button 
+                            @click="handleDirectBuy" 
+                            :disabled="processingPayment"
+                            class="w-full py-4 bg-accent text-white font-serif text-xl uppercase tracking-widest hover:bg-black transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                          >
+                             <i v-if="processingPayment" class="fa-solid fa-circle-notch fa-spin"></i>
+                             <span v-else>Acheter maintenant</span>
+                          </button>
+                           <p class="text-xs text-gray-400 mt-2">Paiement sécurisé via Stripe</p>
+                      </div>
+
                       <div class="flex items-center justify-center gap-2 text-xs uppercase tracking-widest text-text/60">
                           <span class="w-1 h-1 bg-accent rounded-full"></span>
                           Expertisé par PurpleDog
@@ -147,6 +161,7 @@
 import { ref, onMounted } from 'vue'; 
 import { useRoute, useRouter } from 'vue-router';
 import api from '../services/api';
+import { paymentService } from '../services/paymentService'; // Import payment service
 import PublicLayout from '../layouts/PublicLayout.vue';
 import AuctionBox from '../components/AuctionBox.vue'; 
 import OfferBox from '../components/OfferBox.vue';
@@ -158,6 +173,23 @@ const currentImage = ref('');
 const isLoading = ref(true);
 const error = ref('');
 const apiStatus = ref('Init');
+const processingPayment = ref(false);
+
+const handleDirectBuy = async () => {
+    if (!item.value) return;
+    processingPayment.value = true;
+    try {
+        const session = await paymentService.createCheckoutSession(item.value.id);
+        if (session && session.url) {
+            window.location.href = session.url; // Redirect to Stripe
+        }
+    } catch (err) {
+        alert("Erreur lors de l'initialisation du paiement. Veuillez vous connecter.");
+        console.error(err);
+    } finally {
+        processingPayment.value = false;
+    }
+};
 
 onMounted(async () => {
     const objectId = route.params.id;

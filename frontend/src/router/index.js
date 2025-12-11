@@ -23,6 +23,7 @@ import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
 import MyObjectsPage from '../pages/particulier/MyObjectsPage.vue';
 import MyObjectsPagePro from '../pages/pro/MyObjectsPagePro.vue';
 import MyAuctions from '../pages/MyAuctions.vue';
+import EditObjectPage from '../pages/EditObjectPage.vue';
 
 
 const routes = [
@@ -42,6 +43,24 @@ const routes = [
   { path: '/verify-email', name: 'VerifyEmail', component: VerifyEmail },
   { path: '/email-sent', name: 'EmailSent', component: EmailSent },
 
+  {
+    path: '/paiement/succes',
+    name: 'PaymentSuccess',
+    component: () => import('../pages/PaymentSuccess.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/paiement/annule',
+    name: 'PaymentCancel',
+    component: () => import('../pages/PaymentCancel.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/mes-commandes',
+    name: 'ClientOrders',
+    component: () => import('../pages/ClientOrdersPage.vue'),
+    meta: { requiresAuth: true }
+  },
   {
     path: '/admin',
     component: AdminLayout,
@@ -124,6 +143,12 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'PRO' }
   },
 
+  {
+    path: "/objets/modifier/:id",
+    name: "EditObject",
+    component: EditObjectPage,
+    meta: { requiresAuth: true }
+  },
   { path: '/objets/:id', name: 'ObjectDetails', component: ObjectDetailsPage },
   { path: '/encheres/:id', name: 'AuctionDetails', component: ObjectDetailsPage },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
