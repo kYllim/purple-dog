@@ -1,18 +1,32 @@
 const express = require("express");
 const objetsController = require("../controllers/objetsController");
 const authMiddleware = require("../middlewares/authMiddleware");
+const upload = require("../middlewares/uploadMiddleware");
 
 const router = express.Router();
 
+router.get("/", objetsController.obtenirTousLesObjets);
 
-// Protected routes (Specific routes must be before /:id)
-router.get("/mes-encheres", authMiddleware, objetsController.getMyParticipatedAuctions);
+router.get("/categories", objetsController.obtenirCategories);
 
-// Public routes
-router.get("/categories", objetsController.getCategories);
-router.get("/:id", objetsController.getObjetById); // New: Get details including auction status
-router.post("/", authMiddleware, objetsController.createObjet);
-router.post("/:id/encherir", authMiddleware, objetsController.placeBid);
-router.post("/:id/offres", authMiddleware, objetsController.makeOffer);
+router.get("/user/:userId", objetsController.obtenirObjetsUtilisateur);
+
+router.get("/mes-encheres", authMiddleware, objetsController.obtenirMesEncheresParticipees);
+
+router.get("/:id", objetsController.obtenirObjetParId);
+
+router.post("/", authMiddleware, upload.fields([
+    { name: 'photos', maxCount: 10 },
+    { name: 'documents', maxCount: 5 }
+]), objetsController.creerObjet);
+
+router.post("/:id/encherir", authMiddleware, objetsController.placerEnchere);
+router.post("/:id/offres", authMiddleware, objetsController.faireOffre);
+
+router.put("/:id", authMiddleware, upload.fields([
+    { name: 'photos', maxCount: 10 }
+]), objetsController.mettreAJourObjet);
+
+router.delete("/:id", authMiddleware, objetsController.supprimerObjet);
 
 module.exports = router;

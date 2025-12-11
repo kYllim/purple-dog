@@ -73,6 +73,18 @@ const routes = [
   },
 
   {
+    path: '/catalogue',
+    name: 'Catalogue',
+    component: () => import('../pages/Catalogue.vue')
+  },
+  {
+    path: '/catalogue/:id',
+    name: 'ObjectDetail',
+    component: () => import('../pages/ObjectDetailsPage.vue'),
+    meta: { requiresAuth: true, requiresRole: 'PRO' }
+  },
+
+  {
     path: '/mes-encheres',
     name: 'MyAuctions',
     component: MyAuctions,

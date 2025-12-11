@@ -1,30 +1,29 @@
 const pool = require("../db/index");
 
-const getPasEnchere = (currentPrice) => {
-  if (currentPrice < 100) return 10;
-  if (currentPrice < 500) return 50;
+const obtenirPasEnchere = (prixActuel) => {
+  if (prixActuel < 100) return 10;
+  if (prixActuel < 500) return 50;
   return 100;
 };
 
-const checkSolvency = async (userId, estimatedAmount) => {
+const verifierSolvabilite = async (userId, montantEstime) => {
   return true;
 };
 
-const getCategories = async (req, res) => {
+const obtenirCategories = async (req, res) => {
   try {
-    const result = await pool.query("SELECT id, nom FROM categories");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
+    const resultat = await pool.query("SELECT id, nom FROM categories");
+    res.json(resultat.rows);
+  } catch (erreur) {
+    console.error(erreur);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
-const getUserObjects = async (req, res) => {
+const obtenirObjetsUtilisateur = async (req, res) => {
   try {
     let userId = req.params.userId;
 
-    // Fix pour le dev: si userId vaut "1" (mock frontend), on prend le vrai UUID en base
     if (userId === '1') {
       const userRes = await pool.query('SELECT id FROM UTILISATEURS LIMIT 1');
       if (userRes.rowCount > 0) {
@@ -32,22 +31,22 @@ const getUserObjects = async (req, res) => {
       }
     }
 
-    const result = await pool.query(
+    const resultat = await pool.query(
       "SELECT * FROM objets WHERE vendeur_id = $1 ORDER BY cree_le DESC",
       [userId]
     );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
+    res.json(resultat.rows);
+  } catch (erreur) {
+    console.error(erreur);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
-const getObjetById = async (req, res) => {
+const obtenirObjetParId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const query = `
+    const requete = `
             SELECT o.*, 
                    c.nom as categorie_nom,
                    e.id as enchere_id, e.date_fin as enchere_fin, e.prix_actuel as enchere_prix_actuel, e.statut as enchere_statut,
@@ -63,23 +62,34 @@ const getObjetById = async (req, res) => {
             LEFT JOIN encheres e ON o.id = e.objet_id
             WHERE o.id = $1
         `;
-    const result = await pool.query(query, [id]);
+    const resultat = await pool.query(requete, [id]);
 
-    if (result.rows.length === 0) {
+    if (resultat.rows.length === 0) {
       return res.status(404).json({ error: "Objet non trouvé" });
     }
 
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
+    res.json(resultat.rows[0]);
+  } catch (erreur) {
+    console.error(erreur);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
-const createObjet = async (req, res) => {
+const creerObjet = async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    const photos = req.files['photos'] || [];
+    const documents = req.files['documents'] || [];
+
+    if (photos.length < 2) {
+      throw new Error("Il faut au moins 2 photos pour valider l'annonce.");
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+    const urlsPhotos = photos.map(fichier => baseUrl + fichier.filename);
+    const urlsDocuments = documents.map(fichier => baseUrl + fichier.filename);
 
     const {
       titre,
@@ -87,8 +97,6 @@ const createObjet = async (req, res) => {
       categorie_id,
       dimensions,
       poids_kg,
-      photos_urls,
-      documents_urls,
       type_vente,
       prix_souhaite,
       prix_depart,
@@ -96,18 +104,23 @@ const createObjet = async (req, res) => {
       vendeur_id
     } = req.body;
 
-    let finalVendeurId = vendeur_id || (req.utilisateur ? req.utilisateur.id : null);
+    let idVendeurFinal = vendeur_id || (req.utilisateur ? req.utilisateur.id : null);
 
-    if (!finalVendeurId || finalVendeurId === 1 || finalVendeurId === '1') {
+    if (!idVendeurFinal || idVendeurFinal === '1') {
       const userRes = await pool.query('SELECT id FROM UTILISATEURS LIMIT 1');
-      if (userRes.rowCount > 0) {
-        finalVendeurId = userRes.rows[0].id;
-      } else {
-        throw new Error("Aucun utilisateur trouvé pour vendeur_id");
+      if (userRes.rowCount > 0) idVendeurFinal = userRes.rows[0].id;
+    }
+
+    let dimensionsParsees = dimensions;
+    if (typeof dimensions === 'string') {
+      try {
+        dimensionsParsees = JSON.parse(dimensions);
+      } catch (e) {
+        dimensionsParsees = null;
       }
     }
 
-    const insertObjetQuery = `
+    const requeteInsertionObjet = `
       INSERT INTO objets(
         vendeur_id,
         categorie_id,
@@ -128,85 +141,78 @@ const createObjet = async (req, res) => {
       RETURNING *
     `;
 
-    const objetResult = await client.query(insertObjetQuery, [
-      finalVendeurId,
+    const resultatObjet = await client.query(requeteInsertionObjet, [
+      idVendeurFinal,
       categorie_id,
       titre,
       description,
-      dimensions,
-      poids_kg === "" ? null : poids_kg,
-      photos_urls,
-      documents_urls,
+      dimensionsParsees,
+      poids_kg || null,
+      urlsPhotos,
+      urlsDocuments,
       type_vente,
-      prix_souhaite === "" ? null : prix_souhaite,
-      prix_depart === "" ? null : prix_depart,
-      prix_achat_immediat === "" ? null : prix_achat_immediat
+      prix_souhaite || null,
+      prix_depart || null,
+      prix_achat_immediat || null
     ]);
 
-    const newObjet = objetResult.rows[0];
+    const nouvelObjet = resultatObjet.rows[0];
 
     if (type_vente === 'ENCHERE') {
       const dateDebut = new Date();
       const dateFin = new Date(dateDebut);
       dateFin.setDate(dateFin.getDate() + 7);
 
-      const insertEnchereQuery = `
-            INSERT INTO encheres(
-                objet_id,
-                date_debut,
-                date_fin,
-                prix_actuel,
-                pas_enchere_min,
-                statut
-            ) VALUES ($1, $2, $3, $4, $5, 'ACTIVE')
-            RETURNING *
-        `;
+      const prixDepart = prix_depart || 0;
 
-      const startPrice = prix_depart || 0;
-      await client.query(insertEnchereQuery, [
-        newObjet.id,
+      await client.query(`
+            INSERT INTO encheres(
+                objet_id, date_debut, date_fin, prix_actuel, pas_enchere_min, statut
+            ) VALUES ($1, $2, $3, $4, $5, 'ACTIVE')
+      `, [
+        nouvelObjet.id,
         dateDebut,
         dateFin,
-        startPrice,
-        getPasEnchere(startPrice)
+        prixDepart,
+        obtenirPasEnchere(prixDepart)
       ]);
     }
 
     await client.query('COMMIT');
-    res.status(201).json(newObjet);
+    res.status(201).json(nouvelObjet);
 
-  } catch (err) {
+  } catch (erreur) {
     await client.query('ROLLBACK');
-    console.error(err);
-    res.status(500).json({ error: "Erreur serveur: " + err.message });
+    console.error(erreur);
+    res.status(500).json({ error: "Erreur serveur: " + erreur.message });
   } finally {
     client.release();
   }
 };
 
-const placeBid = async (req, res) => {
+const placerEnchere = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
     const { montant, montant_max_auto } = req.body;
-    const encherisseur_id = req.utilisateur.id;
+    const idEncherisseur = req.utilisateur.id;
 
     if (req.utilisateur.role !== 'PRO') {
       return res.status(403).json({ error: "Seuls les professionnels peuvent enchérir." });
     }
 
-    const userBid = parseFloat(montant);
-    const myMax = montant_max_auto ? parseFloat(montant_max_auto) : userBid;
-    const isHardBid = !montant_max_auto;
+    const enchereUtilisateur = parseFloat(montant);
+    const maxPerso = montant_max_auto ? parseFloat(montant_max_auto) : enchereUtilisateur;
+    const estOffreFerme = !montant_max_auto;
 
-    const solvable = await checkSolvency(encherisseur_id, myMax);
+    const solvable = await verifierSolvabilite(idEncherisseur, maxPerso);
     if (!solvable) {
       return res.status(402).json({ error: "Paiement refusé. Veuillez vérifier votre moyen de paiement." });
     }
 
     await client.query('BEGIN');
 
-    const enchereRes = await client.query(
+    const resultatEnchere = await client.query(
       `SELECT e.*, o.vendeur_id 
        FROM encheres e 
        JOIN objets o ON e.objet_id = o.id
@@ -214,12 +220,12 @@ const placeBid = async (req, res) => {
       [id]
     );
 
-    if (enchereRes.rows.length === 0) {
+    if (resultatEnchere.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: "Enchère non trouvée" });
     }
 
-    const enchere = enchereRes.rows[0];
+    const enchere = resultatEnchere.rows[0];
 
     if (enchere.statut !== 'ACTIVE' && enchere.statut !== 'EN_COURS') {
       await client.query('ROLLBACK');
@@ -231,45 +237,45 @@ const placeBid = async (req, res) => {
       return res.status(400).json({ error: "L'enchère est terminée" });
     }
 
-    if (enchere.vendeur_id === encherisseur_id) {
+    if (enchere.vendeur_id === idEncherisseur) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: "Vous ne pouvez pas enchérir sur votre propre objet" });
     }
 
-    const currentPrice = parseFloat(enchere.prix_actuel);
+    const prixActuel = parseFloat(enchere.prix_actuel);
     const pas = parseFloat(enchere.pas_enchere_min);
 
-    const countRes = await client.query('SELECT count(*) FROM encheres_offres WHERE enchere_id = $1', [enchere.id]);
-    const bidCount = parseInt(countRes.rows[0].count);
+    const resultatCompte = await client.query('SELECT count(*) FROM encheres_offres WHERE enchere_id = $1', [enchere.id]);
+    const nombreEncheres = parseInt(resultatCompte.rows[0].count);
 
-    const leaderRes = await client.query(`
+    const resultatLeader = await client.query(`
         SELECT encherisseur_id FROM encheres_offres 
         WHERE enchere_id = $1 
         ORDER BY montant_max_auto DESC, cree_le ASC 
         LIMIT 1
     `, [enchere.id]);
-    const currentLeaderId = leaderRes.rows.length > 0 ? leaderRes.rows[0].encherisseur_id : null;
-    const isAlreadyLeader = currentLeaderId === encherisseur_id;
+    const idLeaderActuel = resultatLeader.rows.length > 0 ? resultatLeader.rows[0].encherisseur_id : null;
+    const estDejaLeader = idLeaderActuel === idEncherisseur;
 
-    let minReq = currentPrice + pas;
-    if (bidCount === 0) {
-      minReq = currentPrice;
-    } else if (isAlreadyLeader) {
-      minReq = currentPrice;
+    let minimumRequis = prixActuel + pas;
+    if (nombreEncheres === 0) {
+      minimumRequis = prixActuel;
+    } else if (estDejaLeader) {
+      minimumRequis = prixActuel;
     }
 
-    if (userBid < minReq) {
+    if (enchereUtilisateur < minimumRequis) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: `Offre insuffisante. Minimum: ${minReq} €` });
+      return res.status(400).json({ error: `Offre insuffisante. Minimum: ${minimumRequis} €` });
     }
 
     await client.query(
       `INSERT INTO encheres_offres (enchere_id, encherisseur_id, montant, montant_max_auto, cree_le)
        VALUES ($1, $2, $3, $4, NOW())`,
-      [enchere.id, encherisseur_id, userBid, myMax]
+      [enchere.id, idEncherisseur, enchereUtilisateur, maxPerso]
     );
 
-    const topBiddersRes = await client.query(`
+    const resultatTopEncherisseurs = await client.query(`
             SELECT encherisseur_id, MAX(montant_max_auto) as max_bid, MIN(cree_le) as earliest_bid
             FROM encheres_offres
             WHERE enchere_id = $1
@@ -278,107 +284,107 @@ const placeBid = async (req, res) => {
             LIMIT 2
       `, [enchere.id]);
 
-    const topBidders = topBiddersRes.rows;
-    let calculatedNewPrice = currentPrice;
+    const topEncherisseurs = resultatTopEncherisseurs.rows;
+    let nouveauPrixCalcule = prixActuel;
 
-    if (topBidders.length === 1) {
-      calculatedNewPrice = currentPrice;
-    } else if (topBidders.length >= 2) {
-      const leader = topBidders[0];
-      const challenger = topBidders[1];
+    if (topEncherisseurs.length === 1) {
+      nouveauPrixCalcule = prixActuel;
+    } else if (topEncherisseurs.length >= 2) {
+      const leader = topEncherisseurs[0];
+      const challenger = topEncherisseurs[1];
 
       const leaderMax = parseFloat(leader.max_bid);
       const challengerMax = parseFloat(challenger.max_bid);
-      const step = getPasEnchere(challengerMax);
+      const pasChallenger = obtenirPasEnchere(challengerMax);
 
-      let tempCalculatedPrice = challengerMax + step;
-      if (tempCalculatedPrice > leaderMax) {
-        tempCalculatedPrice = leaderMax;
+      let prixTemp = challengerMax + pasChallenger;
+      if (prixTemp > leaderMax) {
+        prixTemp = leaderMax;
       }
-      calculatedNewPrice = tempCalculatedPrice;
+      nouveauPrixCalcule = prixTemp;
     }
 
-    let newDateFin = new Date(enchere.date_fin);
-    const now = new Date();
-    const diffMinutes = (newDateFin.getTime() - now.getTime()) / 60000;
+    let nouvelleDateFin = new Date(enchere.date_fin);
+    const maintenant = new Date();
+    const diffMinutes = (nouvelleDateFin.getTime() - maintenant.getTime()) / 60000;
 
     if (diffMinutes < 60) {
-      newDateFin = new Date(now.getTime() + 10 * 60000);
+      nouvelleDateFin = new Date(nouvelleDateFin.getTime() + 10 * 60000);
     }
 
-    if (isHardBid && userBid > calculatedNewPrice) {
-      calculatedNewPrice = userBid;
+    if (estOffreFerme && enchereUtilisateur > nouveauPrixCalcule) {
+      nouveauPrixCalcule = enchereUtilisateur;
     }
 
-    if (calculatedNewPrice < currentPrice) calculatedNewPrice = currentPrice;
+    if (nouveauPrixCalcule < prixActuel) nouveauPrixCalcule = prixActuel;
 
     await client.query(
       `UPDATE encheres SET prix_actuel = $1, date_fin = $2, pas_enchere_min = $3 WHERE id = $4`,
-      [calculatedNewPrice, newDateFin, getPasEnchere(calculatedNewPrice), enchere.id]
+      [nouveauPrixCalcule, nouvelleDateFin, obtenirPasEnchere(nouveauPrixCalcule), enchere.id]
     );
 
     await client.query('COMMIT');
 
-    const actualLeaderId = topBidders.length > 0 ? topBidders[0].encherisseur_id : encherisseur_id;
+    const idLeaderReel = topEncherisseurs.length > 0 ? topEncherisseurs[0].encherisseur_id : idEncherisseur;
 
     const sseService = require('../services/sseService');
     sseService.broadcast('bid_update', {
       objetId: id,
-      nouveauPrix: calculatedNewPrice,
-      nouvelleFin: newDateFin,
-      encherisseurId: actualLeaderId
+      nouveauPrix: nouveauPrixCalcule,
+      nouvelleFin: nouvelleDateFin,
+      encherisseurId: idLeaderReel
     });
     res.json({
       message: "Enchère prise en compte",
-      nouveau_prix: calculatedNewPrice,
-      fin: newDateFin
+      nouveau_prix: nouveauPrixCalcule,
+      fin: nouvelleDateFin
     });
 
-  } catch (err) {
+  } catch (erreur) {
     await client.query('ROLLBACK');
-    console.error(err);
-    res.status(400).json({ error: err.message });
+    console.error(erreur);
+    res.status(400).json({ error: erreur.message });
   } finally {
     client.release();
   }
 };
 
-const makeOffer = async (req, res) => {
+const faireOffre = async (req, res) => {
   try {
     const { id } = req.params;
     const { montant } = req.body;
-    const acheteur_id = req.utilisateur.id;
+    const idAcheteur = req.utilisateur.id;
     if (req.utilisateur.role !== 'PRO') {
       return res.status(403).json({ error: "Seuls les professionnels peuvent faire des offres." });
     }
 
-    const objectQuery = `SELECT * FROM objets WHERE id = $1`;
-    const objRes = await pool.query(objectQuery, [id]);
+    const requeteObjet = `SELECT * FROM objets WHERE id = $1`;
+    const resultatObj = await pool.query(requeteObjet, [id]);
 
-    if (objRes.rows.length === 0) return res.status(404).json({ error: "Objet non trouvé" });
-    const objet = objRes.rows[0];
+    if (resultatObj.rows.length === 0) return res.status(404).json({ error: "Objet non trouvé" });
+    const objet = resultatObj.rows[0];
 
-    if (objet.vendeur_id === acheteur_id) return res.status(400).json({ error: "Impossible de faire une offre sur votre objet" });
+    if (objet.vendeur_id === idAcheteur) return res.status(400).json({ error: "Impossible de faire une offre sur votre objet" });
 
-    const insertQuery = `
+    const requeteInsertion = `
             INSERT INTO offres_achat(objet_id, acheteur_id, montant, statut)
             VALUES($1, $2, $3, 'EN_ATTENTE')
             RETURNING *
       `;
-    const result = await pool.query(insertQuery, [id, acheteur_id, montant]);
+    const resultat = await pool.query(requeteInsertion, [id, idAcheteur, montant]);
 
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
+    res.status(201).json(resultat.rows[0]);
+  } catch (erreur) {
+    console.error(erreur);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
-const getMyParticipatedAuctions = async (req, res) => {
+const obtenirMesEncheresParticipees = async (req, res) => {
   try {
     const userId = req.utilisateur.id;
 
-    const query = `
+    const requete = `
             SELECT DISTINCT ON(e.id)
                 e.id,
                 e.date_fin,
@@ -404,28 +410,156 @@ const getMyParticipatedAuctions = async (req, res) => {
             ORDER BY e.id, e.date_fin ASC
       `;
 
-    const result = await pool.query(query, [userId]);
+    const resultat = await pool.query(requete, [userId]);
 
-    const auctions = result.rows.map(row => ({
-      ...row,
-      is_winning: row.leader_id === userId,
-      photo_principale: row.photos_urls && row.photos_urls.length > 0 ? row.photos_urls[0] : null
+    const encheres = resultat.rows.map(ligne => ({
+      ...ligne,
+      is_winning: ligne.leader_id === userId,
+      photo_principale: ligne.photos_urls && ligne.photos_urls.length > 0 ? ligne.photos_urls[0] : null
     }));
 
-    res.json(auctions);
+    res.json(encheres);
 
-  } catch (err) {
-    console.error("Erreur getMyParticipatedAuctions", err);
+  } catch (erreur) {
+    console.error("Erreur obtenirMesEncheresParticipees", erreur);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
+const obtenirTousLesObjets = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, prix_min, prix_max, categorie_id, type_vente } = req.query;
+    const limitInt = parseInt(limit) || 10;
+    const pageInt = parseInt(page) || 1;
+    const offset = (pageInt - 1) * limitInt;
+
+    const parametres = [];
+    let requete = `
+      SELECT o.*, c.nom as categorie_nom, 
+             e.prix_actuel as enchere_prix, e.date_fin as enchere_fin
+      FROM objets o
+      LEFT JOIN categories c ON o.categorie_id = c.id
+      LEFT JOIN encheres e ON o.id = e.objet_id AND o.type_vente = 'ENCHERE'
+      WHERE o.statut = 'PUBLIE'
+    `;
+
+    if (categorie_id) {
+      parametres.push(categorie_id);
+      requete += ` AND o.categorie_id = $${parametres.length}`;
+    }
+
+    if (type_vente) {
+      parametres.push(type_vente);
+      requete += ` AND o.type_vente = $${parametres.length}`;
+    }
+
+    requete += ` ORDER BY o.cree_le DESC LIMIT $${parametres.length + 1} OFFSET $${parametres.length + 2}`;
+    parametres.push(limitInt, offset);
+
+    const resultat = await pool.query(requete, parametres);
+
+    const resultatCompte = await pool.query('SELECT COUNT(*) FROM objets WHERE statut = \'PUBLIE\'');
+    const total = parseInt(resultatCompte.rows[0].count);
+
+    res.json({
+      data: resultat.rows,
+      meta: {
+        total,
+        page: pageInt,
+        limit: limitInt,
+        pages: Math.ceil(total / limitInt)
+      }
+    });
+
+  } catch (erreur) {
+    console.error(erreur);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+
+const mettreAJourObjet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const modifications = req.body;
+    const userId = req.utilisateur.id;
+
+    const verification = await pool.query('SELECT vendeur_id FROM objets WHERE id = $1', [id]);
+    if (verification.rows.length === 0) return res.status(404).json({ error: "Objet inconnu" });
+
+    if (verification.rows[0].vendeur_id !== userId) {
+      return res.status(403).json({ error: "Vous n'êtes pas le propriétaire" });
+    }
+
+    const requeteMiseAJour = `
+            UPDATE objets 
+            SET titre = COALESCE($1, titre),
+                description = COALESCE($2, description),
+                prix_souhaite = COALESCE($3, prix_souhaite),
+                mis_a_jour_le = NOW()
+            WHERE id = $4
+            RETURNING *
+        `;
+
+    const resultat = await pool.query(requeteMiseAJour, [
+      modifications.titre,
+      modifications.description,
+      modifications.prix_souhaite,
+      id
+    ]);
+
+    res.json(resultat.rows[0]);
+
+  } catch (erreur) {
+    console.error(erreur);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+
+const supprimerObjet = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const userId = req.utilisateur.id;
+
+    const verification = await client.query('SELECT * FROM objets WHERE id = $1', [id]);
+    if (verification.rows.length === 0) return res.status(404).json({ error: "Objet inconnu" });
+
+    const objet = verification.rows[0];
+
+    if (objet.vendeur_id !== userId) {
+      return res.status(403).json({ error: "Non autorisé" });
+    }
+
+    if (objet.type_vente === 'ENCHERE') {
+      const resultatEnchere = await client.query('SELECT id FROM encheres WHERE objet_id = $1', [id]);
+      if (resultatEnchere.rows.length > 0) {
+        const resultatOffres = await client.query('SELECT count(*) FROM encheres_offres WHERE enchere_id = $1', [resultatEnchere.rows[0].id]);
+        if (parseInt(resultatOffres.rows[0].count) > 0) {
+          return res.status(400).json({ error: "Impossible de supprimer: des enchères sont déjà placées." });
+        }
+      }
+    }
+
+    await client.query('DELETE FROM objets WHERE id = $1', [id]);
+    res.json({ message: "Objet supprimé" });
+
+  } catch (erreur) {
+    console.error(erreur);
+    res.status(500).json({ error: "Erreur serveur" });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
-  getCategories,
-  getUserObjects,
-  getObjetById,
-  createObjet,
-  placeBid,
-  makeOffer,
-  getMyParticipatedAuctions
+  obtenirCategories,
+  obtenirObjetsUtilisateur,
+  obtenirObjetParId,
+  creerObjet,
+  placerEnchere,
+  faireOffre,
+  obtenirMesEncheresParticipees,
+  obtenirTousLesObjets,
+  mettreAJourObjet,
+  supprimerObjet
 };

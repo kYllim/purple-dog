@@ -15,6 +15,7 @@
         "eventsource": "^4.1.0",
         "express": "^4.22.1",
         "jsonwebtoken": "^9.0.3",
+        "multer": "^2.0.2",
         "nodemailer": "^7.0.11",
         "pg": "^8.11.3",
         "zod": "^4.1.13"
