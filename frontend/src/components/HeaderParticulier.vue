@@ -19,40 +19,51 @@
           Avis
         </router-link>
 
-        <!-- Profil -->
-        <div class="relative">
-          <button
-            @click="isProfileOpen = !isProfileOpen"
-            class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
-          >
-            Profil
-          </button>
-
-          <div
-            v-if="isProfileOpen"
-            class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-          >
-            <router-link
-              to="/dashboard/particulier/profil"
-              class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-              @click="isProfileOpen = false"
-            >
-              Mon profil
-            </router-link>
-            <router-link
-              to="/dashboard/particulier/messages"
-              class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-              @click="isProfileOpen = false"
-            >
-              Mes messages
-            </router-link>
+        <!-- Profil avec email + icône déconnexion -->
+        <div class="flex items-center gap-4">
+          <!-- Menu profil -->
+          <div class="relative">
             <button
-              @click="logout"
-              class="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
+              @click="isProfileOpen = !isProfileOpen"
+              class="flex items-center gap-2 text-sm font-medium text-text hover:text-accent transition-colors duration-300"
             >
-              Déconnexion
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+              <span class="max-w-[150px] truncate">{{ userEmail }}</span>
             </button>
+
+            <div
+              v-if="isProfileOpen"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+            >
+              <router-link
+                to="/dashboard/particulier/profil"
+                class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                @click="isProfileOpen = false"
+              >
+                Mon profil
+              </router-link>
+              <router-link
+                to="/dashboard/particulier/messages"
+                class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                @click="isProfileOpen = false"
+              >
+                Mes messages
+              </router-link>
+            </div>
           </div>
+
+          <!-- Icône déconnexion -->
+          <button
+            @click="logout"
+            class="p-2 text-text hover:text-accent transition-colors duration-300"
+            title="Déconnexion"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </nav>
 
@@ -68,20 +79,36 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/authStore';
 
+const router = useRouter();
+const authStore = useAuthStore();
 const isProfileOpen = ref(false);
 
+// Récupérer l'email de l'utilisateur
+const userEmail = computed(() => authStore.user?.email || 'Utilisateur');
+
 function logout() {
-  console.log("Déconnexion");
   isProfileOpen.value = false;
-  window.location.href = "/login";
+  authStore.logout();
+  router.push('/connexion');
 }
 
-document.addEventListener('click', (e) => {
+// Fermer le menu au clic en dehors
+const handleClickOutside = (e) => {
   const menu = document.querySelector('.relative');
   if (menu && !menu.contains(e.target)) {
     isProfileOpen.value = false;
   }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
