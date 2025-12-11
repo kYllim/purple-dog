@@ -317,7 +317,7 @@ const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
     console.log('Inscription Particulier réussie:', response);
     
     // Redirection vers la page d'accueil
-    router.push('/');
+    router.push('/particulier/dashboard');
     
   } catch (error) {
     console.error('Erreur inscription:', error);

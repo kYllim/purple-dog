@@ -27,7 +27,8 @@
             </div>
           </div>
        </div>
-
+</div>
+</div>
        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
            <h2 class="text-lg font-bold text-slate-700 mb-4">Activité Récente</h2>
            <p class="text-slate-500 italic">Aucune activité récente.</p>

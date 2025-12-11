@@ -11,12 +11,19 @@ import VerifyEmail from '../pages/VerifyEmail.vue';
 import ProfileEdit from '../pages/ProfileEdit.vue';
 import Error404 from '../pages/Error404.vue';
 import DashboardParticulier from "../pages/particulier/Dashboard.vue";
+import DashboardProfessionnel from "../pages/professionnel/Dashboard.vue";
+import ProfessionnelLayout from '../layouts/ProfessionnelLayout.vue';
+import ParticulierLayout from '../layouts/ParticulierLayout.vue';
+import Favorite from '../pages/professionnel/Favoris.vue';
 import VendreObjet from "../pages/particulier/VendreObjet.vue";
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 import AdminUsers from '../pages/admin/Users.vue';
-import Favorite from '../components/cards/FavoriteCard.vue';
-import History from '../components/cards/HistoryCard.vue';
+import FavoriteCard from '../components/cards/FavoriteCard.vue';
+import HistoryCard from '../components/cards/HistoryCard.vue';
+import History from '../pages/professionnel/Historique.vue';
+
+
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -41,14 +48,21 @@ const routes = [
       { path: 'users', name: 'AdminUsers', component: AdminUsers }
     ]
   },
-  { path: '/favorites', name: 'Favorites', component: Favorite },
-  { path: '/history', name: 'History', component: History },
+  { path: '/favorites', name: 'Favorites', component: FavoriteCard },
+  { path: '/history', name: 'History', component: HistoryCard },
 
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
 
-  { path: "/particulier/dashboard", component: DashboardParticulier },
+  { path: "/particulier/dashboard", component: DashboardParticulier, meta: { requiresAuth: true, requiresRole: 'PARTICULIER' } },
   { path: "/particulier/vendre", component: VendreObjet },
+
+
+  { path: '/professionnel/dashboard',component: DashboardProfessionnel },
+  { path: '/professionnel/favoris',component: Favorite },
+  { path: '/professionnel/historique',component: History }
+
+
   
 ];
 

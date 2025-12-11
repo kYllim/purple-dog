@@ -1,70 +1,62 @@
-import pool from "../db/index.js";
+const service = require('../services/objetService.js');
+const { z } = require('zod');
 
-export const getCategories = async (req, res) => {
-  try {
-    const result = await pool.query("SELECT id, nom FROM categories");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
+const schemaObjet = z.object({
+    titre: z.string(),
+    description: z.string().optional(),
+    categorie: z.string().optional(),
+    type_vente: z.enum(['Encheres', 'Vente rapide']),
+    prix_souhaite: z.number().optional(),
+    prix_depart: z.number().optional(),
+    prix_achat_immediat: z.number().optional(),
+    photos: z.array(z.string()).optional(),
+    documents: z.array(z.string()).optional(),
+});
+
+exports.creer = async (req, res) => {
+    try {
+        const data = schemaObjet.parse(req.body);
+        const userId = req.utilisateur.id;
+
+        const objet = await service.creerObjet(data, userId);
+        res.status(201).json(objet);
+
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({ erreur: e.message });
+    }
 };
 
-export const createObjet = async (req, res) => {
-  try {
-    const {
-      titre,
-      description,
-      categorie_id,
-      dimensions,
-      poids_kg,
-      photos_urls,
-      documents_urls,
-      type_vente,
-      prix_souhaite,
-      prix_depart,
-      prix_achat_immediat
-    } = req.body;
+exports.lister = async (req, res) => {
+    try {
+        const objets = await service.listerObjets(req.query);
+        res.json(objets);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ erreur: "Erreur serveur" });
+    }
+};
 
-    const result = await pool.query(
-      `INSERT INTO objets(
-        vendeur_id,
-        categorie_id,
-        titre,
-        description,
-        dimensions,
-        poids_kg,
-        photos_urls,
-        documents_urls,
-        type_vente,
-        prix_souhaite,
-        prix_depart,
-        prix_achat_immediat,
-        statut,
-        cree_le,
-        mis_a_jour_le
-      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'BROUILLON', NOW(), NOW())
-      RETURNING *`,
-      [
-        1, // pour l'instant on met un id de particulier mocké
-        categorie_id,
-        titre,
-        description,
-        dimensions,
-        poids_kg,
-        photos_urls,
-        documents_urls,
-        type_vente,
-        prix_souhaite,
-        prix_depart,
-        prix_achat_immediat
-      ]
-    );
+exports.voir = async (req, res) => {
+    try {
+        const objet = await service.getObjet(req.params.id);
+        if (!objet) return res.status(404).json({ erreur: "Objet introuvable" });
 
-    res.status(201).json(result.rows[0]);
+        res.json(objet);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ erreur: "Erreur serveur" });
+    }
+};
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
+exports.supprimer = async (req, res) => {
+    try {
+        const ok = await service.supprimerObjet(req.params.id, req.utilisateur.id);
+        if (!ok) return res.status(403).json({ erreur: "Non autorisé ou objet introuvable" });
+
+        res.json({ message: "Objet supprimé" });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ erreur: "Erreur serveur" });
+    }
 };

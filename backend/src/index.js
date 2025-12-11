@@ -4,6 +4,8 @@ const { Pool } = require('pg');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const objetsRoutes = require('./routes/objetRoutes');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,6 +17,8 @@ app.use(express.json());
 // Routes
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
+app.use('/objets', objetsRoutes);
+
 
 // Database connection
 const pool = new Pool({

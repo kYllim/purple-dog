@@ -9,7 +9,7 @@
 
       <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-12 items-center relative">
-        <router-link to="/" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+        <router-link to="/particulier/dashboard" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
           Dashboard
         </router-link>
         <router-link to="/auctions" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">

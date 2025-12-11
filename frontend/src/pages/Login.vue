@@ -118,7 +118,7 @@ const handleLogin = async (formData, { setErrors, setLoading }) => {
     
     // Rediriger selon le rôle
     if (response.role === 'PARTICULIER') {
-      router.push('/');
+      router.push('/particulier/dashboard');
     } else if (response.role === 'PRO') {
       router.push('/');
     } else if (response.role === 'ADMIN') {
