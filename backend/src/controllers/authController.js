@@ -188,7 +188,7 @@ exports.login = async (req, res) => {
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
 
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ message: 'Connexion réussie', token, role: user.role, emailVerified: user.email_verifie });
+        res.json({ message: 'Connexion réussie', token, userId: user.id, role: user.role, emailVerified: user.email_verifie });
     } catch (e) {
         if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors });
         console.error(e);

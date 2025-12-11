@@ -6,7 +6,7 @@
 
         <!-- Fermeture modal (Retour dashboard) -->
         <router-link
-          to="/particulier/mes-objets"
+          :to="dashboardRoute"
           class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg"
         >
           ✕
@@ -70,14 +70,16 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, computed } from "vue";
 import { useRouter } from 'vue-router';
 import { objectService } from '../../services/objectService';
+import { useAuthStore } from '../../stores/authStore';
 import VendreObjetStep1 from "./steps/VendreObjetStep1.vue";
 import VendreObjetStep2 from "./steps/VendreObjetStep2.vue";
 import VendreObjetStep3 from "./steps/VendreObjetStep3.vue";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const currentStep = ref(1);
 const title = "Création d'une vente";
 const subtitle = "Publiez votre objet en toute simplicité";
@@ -106,6 +108,10 @@ const goBack = () => {
   if (currentStep.value > 1) currentStep.value--;
 };
 
+const dashboardRoute = computed(() => {
+    return authStore.isPro ? '/pro/mes-objets' : '/particulier/mes-objets';
+});
+
 const submitForm = async () => {
     try {
         console.log("Objet publié :", form);
@@ -123,13 +129,13 @@ const submitForm = async () => {
                 : ['https://via.placeholder.com/400x300'],
             documents_urls: [], 
             // Mapping des champs si nécessaire
-            vendeur_id: 1 // Mock user ID for now, or get from auth store
+            vendeur_id: authStore.user?.userId || authStore.user?.id || 1
         };
 
         await objectService.createObject(payload);
         
-        // Redirection vers la page mes objets
-        router.push('/particulier/mes-objets');
+        // Redirection vers la page mes objets correpondante
+        router.push(dashboardRoute.value);
         
     } catch (error) {
         console.error("Erreur lors de la création de l'objet", error);

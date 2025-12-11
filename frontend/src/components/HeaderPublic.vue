@@ -29,10 +29,17 @@
           >
             Mes objets
           </router-link>
+          <router-link 
+            v-if="authStore.isParticulier" 
+            to="/history" 
+            class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
+          >
+            Historique
+          </router-link>
 
           <!-- Pro -->
           <template v-if="authStore.isPro">
-            <router-link to="/particulier/mes-objets" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+            <router-link to="/pro/mes-objets" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
               Mes objets
             </router-link>
             <router-link to="/favorites" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
@@ -45,7 +52,7 @@
                Mes Enchères
             </router-link>
             <router-link to="/history" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
-               Historique
+              Historique
             </router-link>
           </template>
 

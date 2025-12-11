@@ -1,6 +1,6 @@
 <template>
   <router-link
-    to="/particulier/vendre"
+    :to="targetRoute"
     class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent hover:bg-accent/5 transition-all duration-300 group cursor-pointer h-[456px]"
   > <!-- Hauteur ajustée pour matcher à peu près ObjectCard -->
     <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
@@ -12,4 +12,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useAuthStore } from '../../stores/authStore';
+
+const authStore = useAuthStore();
+
+const targetRoute = computed(() => {
+    return authStore.isPro ? '/pro/vendre' : '/particulier/vendre';
+});
 </script>

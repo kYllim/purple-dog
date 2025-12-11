@@ -25,6 +25,7 @@ export const useAuthStore = defineStore('auth', {
                 // Backend returns { token, role } but not email.
                 // We use credentials.email to display it in the UI.
                 const userData = {
+                    userId: response.userId,
                     role: response.role,
                     email: credentials.email
                 };

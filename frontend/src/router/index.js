@@ -18,6 +18,7 @@ import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
 import MyObjectsPage from '../pages/particulier/MyObjectsPage.vue';
+import MyObjectsPagePro from '../pages/pro/MyObjectsPagePro.vue';
 import MyAuctions from '../pages/MyAuctions.vue';
 
 
@@ -42,6 +43,18 @@ const routes = [
       { path: '', name: 'AdminDashboard', component: AdminDashboard },
       { path: 'users', name: 'AdminUsers', component: AdminUsers }
     ]
+  },
+
+  {
+    path: "/pro/vendre",
+    component: VendreObjet,
+    meta: { requiresAuth: true, requiresRole: 'PRO' }
+  },
+  {
+    path: "/pro/mes-objets",
+    name: "MyObjectsPro",
+    component: MyObjectsPagePro,
+    meta: { requiresAuth: true, requiresRole: 'PRO' }
   },
   {
     path: '/favorites',
