@@ -21,21 +21,16 @@
 
         <!-- Authenticated -->  
         <template v-else>
+          
           <!-- Particulier -->
-          <router-link 
-            v-if="authStore.isParticulier" 
-            to="/particulier/mes-objets" 
-            class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
-          >
-            Mes objets
-          </router-link>
-          <router-link 
-            v-if="authStore.isParticulier" 
-            to="/history" 
-            class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
-          >
-            Historique
-          </router-link>
+          <template v-if="authStore.isParticulier">
+            <router-link 
+              to="/particulier/mes-objets" 
+              class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
+            >
+              Mes objets
+            </router-link>
+          </template>
 
           <!-- Pro -->
           <template v-if="authStore.isPro">
@@ -45,14 +40,11 @@
             <router-link to="/catalogue" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
               Catalogue
             </router-link>
-            <router-link to="/favorites" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
-               Mes favoris
-            </router-link>
             <router-link to="/mes-encheres" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
                Mes Enchères
             </router-link>
-            <router-link to="/history" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
-              Historique
+            <router-link to="/mes-favoris" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+             Mes favoris
             </router-link>
           </template>
 
@@ -92,12 +84,22 @@
                   Mon Profil
                 </router-link>
                 <router-link
+                  v-if="authStore.isPro"
                   to="/mes-commandes"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                   @click="isProfileOpen = false"
                 >
                   Mes Commandes
+                </router-link>
+                <router-link
+                  v-if="authStore.isParticulier"
+                  to="/particulier/mes-ventes"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  @click="isProfileOpen = false"
+                >
+                  Mes Ventes
                 </router-link>
                 <router-link
                   :to="authStore.isPro ? '/pro/messages' : '/particulier/messages'"

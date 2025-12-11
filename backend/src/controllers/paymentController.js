@@ -95,6 +95,9 @@ const handlePaymentSuccess = async (req, res) => {
                     VALUES ($1, $2, $3, $4, 'PAYE', 'EN_ATTENTE', $5)
                 `, [objetId, buyerId, objet.vendeur_id, montant, session.payment_intent]);
 
+                // Remove from favorites as the item is sold
+                await client.query('DELETE FROM favoris WHERE objet_id = $1', [objetId]);
+
                 await client.query('COMMIT');
                 res.json({ success: true });
             } catch (e) {

@@ -9,17 +9,18 @@ const feedbackRoutes = require('./routes/feedbackRoutes');
 
 const objetsRoutes = require('./routes/objetsRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const favorisRoutes = require('./routes/favorisRoutes');
 // ...
 const { startCronJobs } = require('./services/cronService');
 const sseService = require('./services/sseService');
 
 
 const app = express();
-const path = require('path'); 
+const path = require('path');
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); 
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 
@@ -28,9 +29,10 @@ app.use('/uploads', express.static('uploads'));
 app.get('/events', sseService.subscribe);
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
-app.use('/', feedbackRoutes); 
+app.use('/', feedbackRoutes);
 app.use('/objets', objetsRoutes);
 app.use('/paiement', paymentRoutes);
+app.use('/favoris', favorisRoutes);
 
 
 

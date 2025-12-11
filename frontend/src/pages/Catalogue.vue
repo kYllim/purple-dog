@@ -1,6 +1,6 @@
 <template>
   <PublicLayout>
-    <div class="bg-background min-h-screen pt-20 pb-12">
+    <div class="bg-background min-h-screen pt-20 pb-12 mt-6">
       <div class="max-w-[1920px] mx-auto px-6">
         
         <header class="mb-12 text-center py-10 bg-white border-b border-gray-100 shadow-sm">
@@ -73,43 +73,13 @@
               </div>
 
               <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  <router-link 
+                  <PublicObjectCard 
                     v-for="objet in listeObjets" 
                     :key="objet.id" 
-                    :to="`/catalogue/${objet.id}`"
-                    class="group bg-white border border-gray-100 hover:border-accent hover:shadow-xl transition-all duration-300 flex flex-col"
-                  >
-                      <div class="aspect-[4/3] bg-gray-50 overflow-hidden relative">
-                          <img 
-                            :src="objet.photos_urls?.[0] || '/placeholder.jpg'" 
-                            :alt="objet.titre" 
-                            class="w-full h-full object-cover"
-                          />
-                          <div class="absolute top-2 right-2">
-                             <span v-if="objet.type_vente === 'ENCHERE'" class="bg-accent text-white text-[10px] uppercase font-bold px-2 py-1 tracking-wider">
-                                 Enchère
-                             </span>
-                             <span v-else class="bg-text text-white text-[10px] uppercase font-bold px-2 py-1 tracking-wider">
-                                 Achat Direct
-                             </span>
-                          </div>
-                      </div>
-
-                      <div class="p-4 flex flex-col flex-grow">
-                          <h3 class="font-serif text-lg text-text mb-1 truncate group-hover:text-accent transition">{{ objet.titre }}</h3>
-                          <p class="text-xs text-text/50 uppercase tracking-widest mb-3">{{ objet.categorie_nom }}</p>
-                          
-                          <div class="mt-auto flex justify-between items-end border-t border-gray-100 pt-3">
-                              <div>
-                                  <p class="text-[10px] text-text/50 uppercase">Prix</p>
-                                  <p class="text-lg font-bold text-text">
-                                      {{ formaterPrix(objet.type_vente === 'ENCHERE' ? objet.enchere_prix || objet.prix_depart : objet.prix_achat_immediat) }}
-                                  </p>
-                              </div>
-                              <span class="text-accent text-xs font-bold uppercase group-hover:underline">Voir +</span>
-                          </div>
-                      </div>
-                  </router-link>
+                    :objet="objet"
+                    :is-favorite="favoriteIds.has(objet.id)"
+                    @toggle-favorite="toggleFavorite"
+                  />
               </div>
             
              <div class="mt-12 flex justify-center gap-4" v-if="meta.pages > 1">
@@ -141,6 +111,9 @@
 import { ref, onMounted, reactive } from 'vue';
 import PublicLayout from '../layouts/PublicLayout.vue';
 import serviceObjets from '../services/objetsService';
+import { favoritesService } from '../services/favoritesService';
+import { useAuthStore } from '../stores/authStore';
+import PublicObjectCard from '../components/cards/PublicObjectCard.vue';
 
 const listeObjets = ref([]);
 const categories = ref([]);
@@ -208,8 +181,42 @@ const formaterPrix = (prix) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(prix);
 };
 
+const authStore = useAuthStore();
+const favoriteIds = ref(new Set());
+
+const chargerFavoris = async () => {
+    if (!authStore.isAuthenticated) return;
+    try {
+        const favs = await favoritesService.getFavorites();
+        favoriteIds.value = new Set(favs.map(f => f.id));
+    } catch (e) {
+        console.error("Erreur favoris", e);
+    }
+};
+
+const toggleFavorite = async (objet) => {
+    // e.preventDefault(); // Removed, handled in component
+    if (!authStore.isAuthenticated) {
+        alert("Connectez-vous pour ajouter aux favoris");
+        return;
+    }
+
+    try {
+        if (favoriteIds.value.has(objet.id)) {
+            await favoritesService.removeFavorite(objet.id);
+            favoriteIds.value.delete(objet.id);
+        } else {
+            await favoritesService.addFavorite(objet.id);
+            favoriteIds.value.add(objet.id);
+        }
+    } catch (error) {
+        console.error("Erreur toggle favori", error);
+    }
+};
+
 onMounted(() => {
     chargerCategories();
     chargerObjets();
+    chargerFavoris();
 });
 </script>

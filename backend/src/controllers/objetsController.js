@@ -80,16 +80,27 @@ const creerObjet = async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    const photos = req.files['photos'] || [];
-    const documents = req.files['documents'] || [];
-
-    if (photos.length < 2) {
-      throw new Error("Il faut au moins 2 photos pour valider l'annonce.");
-    }
+    const files = req.files || {};
+    const uploadedPhotos = files['photos'] || [];
+    const documents = files['documents'] || [];
 
     const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
-    const urlsPhotos = photos.map(fichier => baseUrl + fichier.filename);
+    let urlsPhotos = uploadedPhotos.map(fichier => baseUrl + fichier.filename);
     const urlsDocuments = documents.map(fichier => baseUrl + fichier.filename);
+
+    // Handle photos from JSON body (e.g. from frontend mock/wizard)
+    let bodyPhotos = req.body.photos_urls || [];
+    // Ensure bodyPhotos is an array if it's sent as JSON string
+    if (typeof bodyPhotos === 'string') {
+      try { bodyPhotos = JSON.parse(bodyPhotos); } catch (e) { bodyPhotos = []; }
+    }
+    if (Array.isArray(bodyPhotos)) {
+      urlsPhotos = [...urlsPhotos, ...bodyPhotos];
+    }
+
+    if (urlsPhotos.length < 2) {
+      throw new Error("Il faut au moins 2 photos pour valider l'annonce.");
+    }
 
     const {
       titre,
@@ -118,6 +129,9 @@ const creerObjet = async (req, res) => {
       } catch (e) {
         dimensionsParsees = null;
       }
+    } else if (typeof dimensions === 'object' && dimensions !== null) {
+      // If already an object (JSON body)
+      dimensionsParsees = dimensions;
     }
 
     const requeteInsertionObjet = `
@@ -455,6 +469,12 @@ const obtenirTousLesObjets = async (req, res) => {
     if (type_vente) {
       parametres.push(type_vente);
       requete += ` AND o.type_vente = $${parametres.length}`;
+    }
+
+    // Exclude own objects if authenticated
+    if (req.user && req.user.id) {
+      parametres.push(req.user.id);
+      requete += ` AND o.vendeur_id != $${parametres.length}`;
     }
 
     requete += ` ORDER BY o.cree_le DESC LIMIT $${parametres.length + 1} OFFSET $${parametres.length + 2}`;

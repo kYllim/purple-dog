@@ -3,7 +3,7 @@
     <!-- Header simple pour le dashboard particulier -->
     <HeaderPublic />
 
-    <main class="w-full px-12 py-12 mt-20">
+    <main class="w-full px-12 py-12 mt-12">
       
       <!-- Filtres -->
       <div class="bg-white rounded-xl shadow-md p-6 mb-10">

@@ -1,6 +1,6 @@
 <template>
   <PublicLayout>
-    <div class="max-w-4xl mx-auto py-12 px-6">
+    <div class="max-w-4xl mx-auto py-12 px-6 mt-12">
       <div v-if="loading" class="text-center py-20">
          <i class="fa-solid fa-circle-notch fa-spin text-4xl text-accent"></i>
          <p class="mt-4 text-gray-500">Chargement de l'annonce...</p>

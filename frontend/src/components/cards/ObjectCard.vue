@@ -15,16 +15,6 @@
           <span class="px-6 py-2 bg-red-600 text-white font-bold text-lg uppercase tracking-widest -rotate-12 shadow-lg border-2 border-white">VENDU</span>
       </div>
 
-      <!-- Bouton Edit (top right) -->
-      <button
-        v-if="item.statut !== 'VENDU'"
-        class="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors group/edit bg-background hover:bg-accent z-20"
-        @click.stop="$emit('edit', item)"
-        title="Modifier"
-      >
-        <i class="fa-solid fa-pen w-4 h-4 text-accent group-hover/edit:text-white transition-colors"></i>
-      </button>
-
       <!-- Type de vente -->
       <span
         class="absolute bottom-4 left-4 px-3 py-1 rounded-full text-xs font-medium bg-background/90 text-text backdrop-blur-sm z-20"

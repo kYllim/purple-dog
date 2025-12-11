@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../stores/authStore'; 
+import { useAuthStore } from '../stores/authStore';
 
 import Home from '../pages/Home.vue';
 import ContactPage from '../pages/ContactPage.vue';
@@ -84,10 +84,10 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'PRO' }
   },
   {
-    path: '/favorites',
+    path: '/mes-favoris',
     name: 'Favorites',
-    component: Favorite,
-    meta: { requiresAuth: true, requiresRole: 'PRO' }
+    component: () => import('../pages/FavoritesPage.vue'),
+    meta: { requiresAuth: true }
   },
 
   {
@@ -128,6 +128,12 @@ const routes = [
     path: "/particulier/mes-objets",
     name: "MyObjects",
     component: MyObjectsPage,
+    meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
+  },
+  {
+    path: "/particulier/mes-ventes",
+    name: "MySalesParticulier",
+    component: () => import('../pages/particulier/MySalesPage.vue'),
     meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
   },
   {
@@ -176,7 +182,7 @@ router.beforeEach((to, from, next) => {
       if (authStore.userRole === to.meta.requiresRole) {
         next();
       } else {
-  
+
         next({ name: 'Home' });
       }
     } else {

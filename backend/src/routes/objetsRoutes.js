@@ -5,7 +5,7 @@ const upload = require("../middlewares/uploadMiddleware");
 
 const router = express.Router();
 
-router.get("/", objetsController.obtenirTousLesObjets);
+router.get("/", require("../middlewares/authMiddleware").optionalAuth, objetsController.obtenirTousLesObjets);
 
 router.get("/categories", objetsController.obtenirCategories);
 

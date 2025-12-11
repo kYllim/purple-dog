@@ -1,6 +1,6 @@
 <template>
   <PublicLayout>
-    <div class="max-w-6xl mx-auto px-6 py-12 min-h-screen">
+    <div class="max-w-6xl mx-auto px-6 py-12 mt-20 min-h-screen">
       <h1 class="text-4xl font-serif text-text mb-8 uppercase tracking-widest border-b border-accent/20 pb-4">
           Mon Historique d'Achats
       </h1>
