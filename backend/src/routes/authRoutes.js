@@ -3,9 +3,15 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
 
+const upload = require('../middlewares/uploadMiddleware');
+
 // Routes publiques
-router.post('/register/pro', authController.registerPro);
-router.post('/register/individual', authController.registerIndividual);
+router.post('/register/pro', upload.fields([
+    { name: 'kbis', maxCount: 1 },
+    { name: 'photo_profil', maxCount: 1 } // Au cas où
+]), authController.registerPro);
+
+router.post('/register/individual', upload.single('photo_profil'), authController.registerIndividual);
 router.post('/login', authController.login);
 router.post('/verify-email', authController.verifyEmail);
 router.post('/forgot-password', authController.forgotPassword);

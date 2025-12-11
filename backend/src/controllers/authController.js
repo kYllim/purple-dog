@@ -46,6 +46,14 @@ const schemaLogin = z.object({
 
 exports.registerPro = async (req, res) => {
     try {
+        if (req.files) {
+            const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+            if (req.files['kbis']) {
+                req.body.kbis_url = baseUrl + req.files['kbis'][0].filename;
+            }
+            // Si on ajoute d'autres fichiers plus tard
+        }
+
         const d = schemaPro.parse(req.body);
         const { email, password, company_name, siret, kbis_url, site_web, specialites, address, city, zip_code, country } = d;
 
@@ -116,8 +124,13 @@ exports.registerPro = async (req, res) => {
 
 exports.registerIndividual = async (req, res) => {
     try {
+        if (req.file) {
+            const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+            req.body.photo_profil_url = baseUrl + req.file.filename;
+        }
+
         const d = schemaParticulier.parse(req.body);
-        const { email, password, first_name, last_name, age, address, city, zip_code, country } = d;
+        const { email, password, first_name, last_name, age, address, city, zip_code, country, photo_profil_url } = d;
 
         const exist = await pool.query('SELECT id FROM UTILISATEURS WHERE email = $1', [email]);
         if (exist.rows.length > 0) return res.status(400).json({ error: 'Email pris' });
@@ -135,9 +148,9 @@ exports.registerIndividual = async (req, res) => {
             const uid = userRes.rows[0].id;
 
             await client.query(
-                `INSERT INTO DETAILS_PARTICULIER (utilisateur_id, prenom, nom, age)
-                 VALUES ($1, $2, $3, $4)`,
-                [uid, first_name, last_name, age]
+                `INSERT INTO DETAILS_PARTICULIER (utilisateur_id, prenom, nom, age, photo_profil_url)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [uid, first_name, last_name, age, photo_profil_url]
             );
 
             // Générer token de vérification d'email

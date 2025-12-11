@@ -22,14 +22,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp/;
+    const allowedTypes = /jpeg|jpg|png|webp|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf';
 
     if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb(new Error('Seules les images sont autorisées (jpeg, jpg, png, webp) !'));
+        cb(new Error('Seules les images (jpeg, jpg, png, webp) et les PDF sont autorisés !'));
     }
 };
 
