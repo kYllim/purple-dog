@@ -197,6 +197,8 @@ exports.login = async (req, res) => {
         if (resDb.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
 
         const user = resDb.rows[0];
+        if (user.est_bloque) return res.status(403).json({ error: 'Votre compte a été suspendu.' });
+
         const valid = await bcrypt.compare(password, user.mot_de_passe_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
 

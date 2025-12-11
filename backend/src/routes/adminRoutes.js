@@ -16,4 +16,8 @@ router.delete('/utilisateurs/:id', controller.supprimer);
 router.get('/objets', objetsController.listerTout);
 router.delete('/objets/:id', objetsController.supprimer);
 
+// Finance
+const financeController = require('../controllers/adminFinanceController');
+router.get('/finance', financeController.getFinanceStats);
+
 module.exports = router;
