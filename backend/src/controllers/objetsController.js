@@ -104,7 +104,7 @@ const creerObjet = async (req, res) => {
       vendeur_id
     } = req.body;
 
-    let idVendeurFinal = vendeur_id || (req.utilisateur ? req.utilisateur.id : null);
+    let idVendeurFinal = vendeur_id || (req.user ? req.user.id : null);
 
     if (!idVendeurFinal || idVendeurFinal === '1') {
       const userRes = await pool.query('SELECT id FROM UTILISATEURS LIMIT 1');
@@ -195,9 +195,9 @@ const placerEnchere = async (req, res) => {
   try {
     const { id } = req.params;
     const { montant, montant_max_auto } = req.body;
-    const idEncherisseur = req.utilisateur.id;
+    const idEncherisseur = req.user.id;
 
-    if (req.utilisateur.role !== 'PRO') {
+    if (req.user.role !== 'PRO') {
       return res.status(403).json({ error: "Seuls les professionnels peuvent enchérir." });
     }
 
@@ -353,8 +353,8 @@ const faireOffre = async (req, res) => {
   try {
     const { id } = req.params;
     const { montant } = req.body;
-    const idAcheteur = req.utilisateur.id;
-    if (req.utilisateur.role !== 'PRO') {
+    const idAcheteur = req.user.id;
+    if (req.user.role !== 'PRO') {
       return res.status(403).json({ error: "Seuls les professionnels peuvent faire des offres." });
     }
 
@@ -382,7 +382,7 @@ const faireOffre = async (req, res) => {
 
 const obtenirMesEncheresParticipees = async (req, res) => {
   try {
-    const userId = req.utilisateur.id;
+    const userId = req.user.id;
 
     const requete = `
             SELECT DISTINCT ON(e.id)
@@ -478,40 +478,100 @@ const obtenirTousLesObjets = async (req, res) => {
 };
 
 const mettreAJourObjet = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
-    const modifications = req.body;
-    const userId = req.utilisateur.id;
+    const { titre, description, prix_souhaite, dimensions, poids_kg, existing_photos } = req.body;
+    const userId = req.user.id;
 
-    const verification = await pool.query('SELECT vendeur_id FROM objets WHERE id = $1', [id]);
-    if (verification.rows.length === 0) return res.status(404).json({ error: "Objet inconnu" });
+    console.log("---------------- DEBUG UPDATE OBJET ----------------");
+    console.log("Body:", req.body);
+    console.log("Files:", req.files);
+    console.log("Existing Photos Raw:", existing_photos);
 
-    if (verification.rows[0].vendeur_id !== userId) {
+    // 1. Vérifier la propriété (avec FOR UPDATE pour verrouiller)
+    await client.query('BEGIN');
+    const verification = await client.query('SELECT vendeur_id, photos_urls FROM objets WHERE id = $1 FOR UPDATE', [id]);
+
+    // Note: Verification fields might differ if schema changed, assume 'vendeur_id' from previous view
+    const checkQuery = await client.query('SELECT vendeur_id, photos_urls FROM objets WHERE id = $1', [id]);
+
+    if (checkQuery.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: "Objet inconnu" });
+    }
+
+    const currentObj = checkQuery.rows[0];
+
+    if (currentObj.vendeur_id !== userId) {
+      await client.query('ROLLBACK');
       return res.status(403).json({ error: "Vous n'êtes pas le propriétaire" });
     }
 
+    // 2. Gérer les photos
+    // existing_photos est envoyé comme string JSON par le front (FormData)
+    let finalPhotos = [];
+    if (existing_photos) {
+      try {
+        finalPhotos = JSON.parse(existing_photos);
+        if (!Array.isArray(finalPhotos)) finalPhotos = [];
+      } catch (e) {
+        finalPhotos = [];
+      }
+    }
+
+    // Ajouter les nouvelles photos
+    if (req.files && req.files['photos']) {
+      const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+      const newPhotos = req.files['photos'].map(f => baseUrl + f.filename);
+      finalPhotos = [...finalPhotos, ...newPhotos];
+    }
+
+    // Si aucune photo finale (cas rare si on supprime tout), on peut decider de garder l'ancienne ou autoriser vide (ici on autorise)
+
+    // 3. Parser dimensions
+    let finalDimensions = dimensions;
+    if (typeof dimensions === 'string') {
+      try {
+        finalDimensions = JSON.parse(dimensions);
+      } catch (e) {
+        finalDimensions = null;
+      }
+    }
+
+    // 4. Update
     const requeteMiseAJour = `
             UPDATE objets 
             SET titre = COALESCE($1, titre),
                 description = COALESCE($2, description),
                 prix_souhaite = COALESCE($3, prix_souhaite),
+                dimensions = $4,
+                poids_kg = $5,
+                photos_urls = $6,
                 mis_a_jour_le = NOW()
-            WHERE id = $4
+            WHERE id = $7
             RETURNING *
         `;
 
-    const resultat = await pool.query(requeteMiseAJour, [
-      modifications.titre,
-      modifications.description,
-      modifications.prix_souhaite,
+    const resultat = await client.query(requeteMiseAJour, [
+      titre,
+      description,
+      prix_souhaite,
+      finalDimensions,
+      poids_kg,
+      finalPhotos,
       id
     ]);
 
+    await client.query('COMMIT');
     res.json(resultat.rows[0]);
 
   } catch (erreur) {
+    await client.query('ROLLBACK');
     console.error(erreur);
     res.status(500).json({ error: "Erreur serveur" });
+  } finally {
+    client.release();
   }
 };
 
@@ -519,7 +579,7 @@ const supprimerObjet = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const userId = req.utilisateur.id;
+    const userId = req.user.id;
 
     const verification = await client.query('SELECT * FROM objets WHERE id = $1', [id]);
     if (verification.rows.length === 0) return res.status(404).json({ error: "Objet inconnu" });

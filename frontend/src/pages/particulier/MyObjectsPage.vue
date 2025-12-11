@@ -86,7 +86,7 @@
 
         <!-- Liste des objets filtrés -->
         <div v-for="obj in filteredObjects" :key="obj.id" class="h-full">
-            <ObjectCard :item="obj" />
+            <ObjectCard :item="obj" @edit="handleEdit" @manage="handleEdit" />
         </div>
 
       </div>
@@ -103,6 +103,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { objectService } from '../../services/objectService';
 import { useAuthStore } from '../../stores/authStore';
 import ObjectCard from '../../components/cards/ObjectCard.vue';
@@ -185,5 +186,10 @@ const resetFilters = () => {
     filters.saleType = '';
     filters.minPrice = '';
     filters.maxPrice = '';
+}
+// Utilisation de useRouter est plus propre
+const router = useRouter();
+const handleEdit = (item) => {
+    router.push({ name: 'EditObject', params: { id: item.id } });
 }
 </script>

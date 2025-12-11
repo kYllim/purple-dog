@@ -13,7 +13,11 @@ export const objectService = {
 
     async createObject(objectData) {
         try {
-            const response = await api.post('/objets', objectData);
+            const config = {};
+            if (objectData instanceof FormData) {
+                config.headers = { 'Content-Type': 'multipart/form-data' };
+            }
+            const response = await api.post('/objets', objectData, config);
             return response.data;
         } catch (error) {
             console.error('Error creating object:', error);
@@ -27,6 +31,30 @@ export const objectService = {
             return response.data;
         } catch (error) {
             console.error('Error fetching categories:', error);
+            throw error;
+        }
+    },
+
+    async getObjectById(id) {
+        try {
+            const response = await api.get(`/objets/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching object:', error);
+            throw error;
+        }
+    },
+
+    async updateObject(id, objectData) {
+        try {
+            const config = {};
+            if (objectData instanceof FormData) {
+                config.headers = { 'Content-Type': 'multipart/form-data' };
+            }
+            const response = await api.put(`/objets/${id}`, objectData, config);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating object:', error);
             throw error;
         }
     }

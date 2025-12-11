@@ -85,10 +85,19 @@
               >
                 <router-link
                   :to="authStore.isPro ? '/pro/profil' : '/particulier/profil'"
-                  class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
                   @click="isProfileOpen = false"
                 >
-                  Mon profil
+                  Mon Profil
+                </router-link>
+                <router-link
+                  to="/mes-commandes"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  @click="isProfileOpen = false"
+                >
+                  Mes Commandes
                 </router-link>
                 <router-link
                   :to="authStore.isPro ? '/pro/messages' : '/particulier/messages'"

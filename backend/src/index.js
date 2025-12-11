@@ -1,11 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-
-// const objectsRoutes = require('./routes/objectsRoutes'); // Supprimé car fusionné
 const objetsRoutes = require('./routes/objetsRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+// ...
 const { startCronJobs } = require('./services/cronService');
 const sseService = require('./services/sseService');
 
@@ -26,6 +27,7 @@ app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
 // app.use('/objects', objectsRoutes); // Route fusionnée
 app.use('/objets', objetsRoutes);
+app.use('/paiement', paymentRoutes);
 
 
 // Database connection
