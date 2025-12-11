@@ -81,9 +81,6 @@
                 <div class="text-sm font-semibold text-text/60 mb-2">PRIX D'ACHAT IMMÉDIAT</div>
                 <div class="text-5xl font-extrabold text-accent mb-6">{{ formatPrice(item.prix_achat_immediat) }}</div>
             </div>
-             <button class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg hover:bg-text transition-all duration-200 mb-6">
-                Acheter immédiatement
-            </button>
         </div>
         
 
