@@ -10,7 +10,6 @@ import ResetPassword from '../pages/ResetPassword.vue';
 import VerifyEmail from '../pages/VerifyEmail.vue';
 import ProfileEdit from '../pages/ProfileEdit.vue';
 import Error404 from '../pages/Error404.vue';
-import DashboardParticulier from "../pages/particulier/Dashboard.vue";
 import VendreObjet from "../pages/particulier/VendreObjet.vue";
 import AdminLayout from '../layouts/AdminLayout.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
@@ -18,6 +17,7 @@ import AdminUsers from '../pages/admin/Users.vue';
 import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
+import MyObjectsPage from '../pages/particulier/MyObjectsPage.vue';
 
 
 const routes = [
@@ -60,13 +60,14 @@ const routes = [
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
 
   {
-    path: "/particulier/dashboard",
-    component: DashboardParticulier,
+    path: "/particulier/vendre",
+    component: VendreObjet,
     meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
   },
   {
-    path: "/particulier/vendre",
-    component: VendreObjet,
+    path: "/particulier/mes-objets",
+    name: "MyObjects",
+    component: MyObjectsPage,
     meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
   },
 

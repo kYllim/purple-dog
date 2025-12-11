@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen bg-background flex items-center justify-center p-4 py-12">
-    <div class="w-full max-w-2xl relative">
+  <div class="w-full h-full bg-background flex flex-col items-center justify-start">
+    <div class="w-full max-w-4xl relative">
       <!-- Card -->
       <div class="bg-white rounded-2xl shadow-xl p-8 border border-accent/10">
 
-        <!-- Fermeture modal -->
-        <button
-          @click="$emit('close')"
+        <!-- Fermeture modal (Retour dashboard) -->
+        <router-link
+          to="/particulier/mes-objets"
           class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg"
         >
           ✕
-        </button>
+        </router-link>
 
         <!-- Header -->
         <div class="text-center mb-6">
@@ -72,6 +72,7 @@
 <script setup>
 import { reactive, ref } from "vue";
 import { useRouter } from 'vue-router';
+import { objectService } from '../../services/objectService';
 import VendreObjetStep1 from "./steps/VendreObjetStep1.vue";
 import VendreObjetStep2 from "./steps/VendreObjetStep2.vue";
 import VendreObjetStep3 from "./steps/VendreObjetStep3.vue";
@@ -105,8 +106,34 @@ const goBack = () => {
   if (currentStep.value > 1) currentStep.value--;
 };
 
-const submitForm = () => {
-  console.log("Objet publié :", form);
-  alert("Objet publié !");
+const submitForm = async () => {
+    try {
+        console.log("Objet publié :", form);
+        
+        // On s'assure que photos_urls est un tableau de strings
+        // Note: Le backend attend photos_urls, documents_urls
+        // Le form a 'photos' qui est probablement un tableau de File s'il y a upload, ou d'URLs
+        // Pour l'instant on mocke les urls si ce sont des fichiers (car pas d'upload implémenté)
+        
+        const payload = {
+            ...form,
+            // Si photos contient des objets {file, preview}, on prend preview, sinon on met un placeholder
+            photos_urls: form.photos.length 
+                ? form.photos.map(p => p.preview || p) 
+                : ['https://via.placeholder.com/400x300'],
+            documents_urls: [], 
+            // Mapping des champs si nécessaire
+            vendeur_id: 1 // Mock user ID for now, or get from auth store
+        };
+
+        await objectService.createObject(payload);
+        
+        // Redirection vers la page mes objets
+        router.push('/particulier/mes-objets');
+        
+    } catch (error) {
+        console.error("Erreur lors de la création de l'objet", error);
+        alert("Une erreur est survenue lors de la création de l'objet.");
+    }
 };
 </script>

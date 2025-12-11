@@ -1,6 +1,6 @@
-import pool from "../db/index.js";
+const pool = require("../db/index");
 
-export const getCategories = async (req, res) => {
+const getCategories = async (req, res) => {
   try {
     const result = await pool.query("SELECT id, nom FROM categories");
     res.json(result.rows);
@@ -10,7 +10,30 @@ export const getCategories = async (req, res) => {
   }
 };
 
-export const createObjet = async (req, res) => {
+const getUserObjects = async (req, res) => {
+  try {
+    let userId = req.params.userId;
+
+    // Fix pour le dev: si userId vaut "1" (mock frontend), on prend le vrai UUID en base
+    if (userId === '1') {
+      const userRes = await pool.query('SELECT id FROM UTILISATEURS LIMIT 1');
+      if (userRes.rowCount > 0) {
+        userId = userRes.rows[0].id;
+      }
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM objets WHERE vendeur_id = $1 ORDER BY cree_le DESC",
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+
+const createObjet = async (req, res) => {
   try {
     const {
       titre,
@@ -23,8 +46,21 @@ export const createObjet = async (req, res) => {
       type_vente,
       prix_souhaite,
       prix_depart,
-      prix_achat_immediat
+      prix_achat_immediat,
+      vendeur_id
     } = req.body;
+
+    let finalVendeurId = vendeur_id;
+
+    if (!finalVendeurId || finalVendeurId === 1 || finalVendeurId === '1') {
+      // Fallback: Récupérer le premier utilisateur trouvé (pour le dev)
+      const userRes = await pool.query('SELECT id FROM UTILISATEURS LIMIT 1');
+      if (userRes.rowCount > 0) {
+        finalVendeurId = userRes.rows[0].id;
+      } else {
+        throw new Error("Aucun utilisateur trouvé pour vendeur_id");
+      }
+    }
 
     const result = await pool.query(
       `INSERT INTO objets(
@@ -46,18 +82,18 @@ export const createObjet = async (req, res) => {
       ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'BROUILLON', NOW(), NOW())
       RETURNING *`,
       [
-        1, // pour l'instant on met un id de particulier mocké
+        finalVendeurId,
         categorie_id,
         titre,
         description,
         dimensions,
-        poids_kg,
+        poids_kg === "" ? null : poids_kg,
         photos_urls,
         documents_urls,
         type_vente,
-        prix_souhaite,
-        prix_depart,
-        prix_achat_immediat
+        prix_souhaite === "" ? null : prix_souhaite,
+        prix_depart === "" ? null : prix_depart,
+        prix_achat_immediat === "" ? null : prix_achat_immediat
       ]
     );
 
@@ -67,4 +103,10 @@ export const createObjet = async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Erreur serveur" });
   }
+};
+
+module.exports = {
+  getCategories,
+  createObjet,
+  getUserObjects
 };

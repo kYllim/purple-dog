@@ -24,26 +24,22 @@
           <!-- Particulier -->
           <router-link 
             v-if="authStore.isParticulier" 
-            to="/particulier/dashboard" 
+            to="/particulier/mes-objets" 
             class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
           >
             Mes objets
           </router-link>
-          <router-link 
-            v-if="authStore.isParticulier" 
-            to="/particulier/vendre" 
-            class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300"
-          >
-            Mettre en vente
-          </router-link>
 
           <!-- Pro -->
           <template v-if="authStore.isPro">
+            <router-link to="/particulier/mes-objets" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+              Mes objets
+            </router-link>
             <router-link to="/favorites" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
-              Mes favoris
+              Catalogue
             </router-link>
             <router-link to="/auctions" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
-               Enchères
+               Mes favoris
             </router-link>
             <router-link to="/history" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
                Historique
