@@ -3,7 +3,7 @@
     <!-- Header simple pour le dashboard particulier -->
     <HeaderPublic />
 
-    <main class="w-full px-12 py-12">
+    <main class="w-full px-12 py-12 mt-20">
       
       <!-- Filtres -->
       <div class="bg-white rounded-xl shadow-md p-6 mb-10">
@@ -17,7 +17,7 @@
                <input 
                  v-model="filters.search"
                  type="text" 
-                 placeholder="Vase Ming..." 
+                 placeholder="Montre Suisse..." 
                  class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-accent transition-colors"
                />
             </div>
