@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const objetRoutes = require('./routes/objetRoutes');
+const objetRoutes = require('./routes/catalogueRoutes');
 
 const app = express();
 const port = process.env.PORT || 3000;

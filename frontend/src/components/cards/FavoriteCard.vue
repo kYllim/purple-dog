@@ -4,7 +4,7 @@
       'rounded-xl border overflow-hidden transition-all duration-300 group',
       item.statut_vente === 'VENDU' || item.statut_vente === 'CLOS'
         ? 'border-gray-200 bg-gray-50 opacity-70'
-        : 'border-gray-200 bg-background hover:border-accent/50 hover:-translate-y-0.5',
+        : 'border-gray-200 bg-white hover:border-accent/50 hover:-translate-y-0.5',
     ]"
   >
     <div class="relative h-64 overflow-hidden">
@@ -22,16 +22,16 @@
       <button
         :class="[
           'absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-colors group/heart',
-          item.isFavorite ? 'bg-accent' : 'bg-background/90',
+          favoritesStore.isFavorite(item.id) ? 'bg-accent' : 'bg-white/90',
         ]"
         @click.stop="handleToggleFavorite"
-        :aria-label="item.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+        :aria-label="favoritesStore.isFavorite(item.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'"
       >
         <Icon
-          :icon="item.isFavorite ? 'line-md:heart-filled' : 'line-md:heart'"
+          :icon="favoritesStore.isFavorite(item.id) ? 'line-md:heart-filled' : 'line-md:heart'"
           :class="[
             'w-5 h-5 transition-transform duration-200',
-            item.isFavorite ? 'text-background' : 'text-accent',
+            favoritesStore.isFavorite(item.id) ? 'text-background' : 'text-accent',
             'group-hover/heart:scale-110',
           ]"
         />
@@ -42,14 +42,14 @@
         :class="
           item.statut_vente === 'VENDU' || item.statut_vente === 'CLOS'
             ? 'bg-gray-700 text-gray-200'
-            : 'bg-text text-background'
+            : 'bg-green-600 text-white'
         "
       >
-        {{ getDisplayStatus(item.status, item.statut_vente) }}
+        {{ getDisplayStatus(item.statut_vente) }}
       </span>
 
       <span
-        class="absolute bottom-4 left-4 px-3 py-1 rounded-full text-xs font-medium bg-background/90 text-text backdrop-blur-sm"
+        class="absolute bottom-4 left-4 px-3 py-1 rounded-full text-xs font-medium bg-white/90 text-text backdrop-blur-sm"
       >
         {{ item.type_vente === 'ENCHERE' ? 'Enchères' : 'Vente rapide' }}
       </span>
@@ -70,7 +70,7 @@
       >
         <div>
           <p class="text-xs text-gray-500 mb-1 font-medium uppercase">
-            {{ getInfoLabel(item.status, item.type_vente) }}
+            {{ getInfoLabel(item.type_vente) }}
           </p>
           <p
             :class="
@@ -100,7 +100,7 @@
             : 'bg-accent text-background hover:bg-text',
         ]"
       >
-        {{ getActionButtonText(item.status, item.type_vente) }}
+        {{ getActionButtonText(item.type_vente) }}
       </button>
     </div>
   </div>
@@ -109,6 +109,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Icon } from "@iconify/vue";
+import { useFavoritesStore } from '../../stores/favoritesStore';
 
 const props = defineProps({
   item: {
@@ -117,7 +118,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['toggle-favorite']);
+const favoritesStore = useFavoritesStore();
 const isLoadingFavorite = ref(false);
 
 const formatPrice = (value) => {
@@ -130,20 +131,17 @@ const formatPrice = (value) => {
   }).format(value);
 };
 
-const getInfoLabel = (status, typeVente) => {
-  if (status === 'Proposition envoyée') return 'Votre proposition';
+const getInfoLabel = (typeVente) => {
   if (typeVente === 'ENCHERE') return 'Enchère actuelle';
   return 'Prix fixe';
 };
 
-const getDisplayStatus = (status, statutVente) => {
-  if (status === 'Proposition envoyée') return 'OFFRE ACTIVE';
-  if (statutVente === 'VENDU' || statutVente === 'CLOS') return 'VENDU';
+const getDisplayStatus = (statutVente) => {
+  if (statutVente === 'VENDU' || statutVente === 'CLOS') return 'PLUS DISPONIBLE';
   return 'EN VENTE';
 };
 
-const getActionButtonText = (status, typeVente) => {
-  if (status === 'Proposition envoyée') return 'Voir mon offre';
+const getActionButtonText = (typeVente) => {
   if (typeVente === 'ENCHERE') return 'Placer une enchère';
   if (typeVente === 'INSTANTANE') return 'Faire une offre';
   return 'Détails';
@@ -154,41 +152,12 @@ const handleToggleFavorite = async () => {
   
   isLoadingFavorite.value = true;
   try {
-    const utilisateurId = localStorage.getItem('userId');
-    
-    if (!utilisateurId) {
-      // Mode simulation si pas d'utilisateur
-      props.item.isFavorite = !props.item.isFavorite;
-      emit('toggle-favorite', { objetId: props.item.id, isFavorite: props.item.isFavorite });
-      return;
-    }
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
 
-    // Mettre à jour localement AVANT l'appel API pour l'UX
-    const ancienEtat = props.item.isFavorite;
-    props.item.isFavorite = !props.item.isFavorite;
-
-    const response = await fetch('http://localhost:3000/api/favorites/toggle', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        utilisateur_id: utilisateurId,
-        objet_id: props.item.id
-      })
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      emit('toggle-favorite', { objetId: props.item.id, isFavorite: result.isFavorite });
-    } else {
-      props.item.isFavorite = ancienEtat;
-    }
+    await favoritesStore.toggleFavorite(userId, props.item.id);
   } catch (err) {
     console.error('Erreur lors du toggle favori:', err);
-    // Réinitialiser si erreur
-    props.item.isFavorite = !props.item.isFavorite;
   } finally {
     isLoadingFavorite.value = false;
   }

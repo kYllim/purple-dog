@@ -1,19 +1,20 @@
 <template>
   <PublicLayout>
     <div class="p-6">
-      <h1 class="text-3xl font-bold mb-6">Tous les objets</h1>
+      <h1 class="text-3xl font-bold mb-6">Mes favoris</h1>
       
       <div v-if="loading" class="text-center text-gray-500 py-12">
-        Chargement des objets...
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+        Chargement...
       </div>
-
-      <div v-else-if="objets.length === 0" class="text-center text-gray-500 py-12">
-        Aucun objet disponible pour le moment.
+      
+      <div v-else-if="favoris.length === 0" class="text-center text-gray-500 py-12">
+        Aucun favoris pour le moment.
       </div>
-
+      
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <FavoriteCard 
-          v-for="item in objets" 
+          v-for="item in favoris" 
           :key="item.id"
           :item="item"
         />
@@ -28,22 +29,27 @@ import PublicLayout from '../layouts/PublicLayout.vue';
 import FavoriteCard from '../components/cards/FavoriteCard.vue';
 import { useFavoritesStore } from '../stores/favoritesStore';
 
-const objets = ref([]);
+const favoris = ref([]);
 const loading = ref(true);
-const utilisateurId = ref(localStorage.getItem('userId') || null);
+const utilisateurId = ref(localStorage.getItem('userId'));
 const favoritesStore = useFavoritesStore();
 
 onMounted(async () => {
+  if (!utilisateurId.value) {
+    loading.value = false;
+    return;
+  }
+
   try {
-    const queryParam = utilisateurId.value ? `?utilisateur_id=${utilisateurId.value}` : '';
-    const response = await fetch(`http://localhost:3000/api/catalogue${queryParam}`);
+    // Charger les favoris dans le store
+    await favoritesStore.loadFavorites(utilisateurId.value);
+
+    const response = await fetch(`http://localhost:3000/api/favorites/${utilisateurId.value}`);
     if (response.ok) {
-      objets.value = await response.json();
-    } else {
-      console.error('Erreur API:', response.status);
+      favoris.value = await response.json();
     }
   } catch (err) {
-    console.error('Erreur lors du chargement:', err);
+    console.error('Erreur:', err);
   } finally {
     loading.value = false;
   }

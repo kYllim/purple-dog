@@ -1,15 +1,22 @@
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
-import { createPinia } from 'pinia';
-import { Icon } from '@iconify/vue';
-
-
 import './assets/css/base.css';
-
+import { useFavoritesStore } from './stores/favoritesStore'; // Importer le store
 
 const app = createApp(App);
-app.component('Icon', Icon);
-app.use(createPinia());
+const pinia = createPinia();
+
+app.use(pinia);
 app.use(router);
-app.mount('#app');
+
+router.isReady().then(() => {
+  const favoritesStore = useFavoritesStore();
+  const userId = localStorage.getItem('userId');
+  if (userId) {
+    favoritesStore.loadFavorites(userId);
+  }
+  
+  app.mount('#app');
+});

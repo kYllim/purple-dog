@@ -1,11 +1,11 @@
 <template>
-  <main id="main-content" class="max-w-[1600px] mx-auto px-8 py-12 bg-background">
+  <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 py-12 bg-background">
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
       
       <div id="media-section" class="lg:col-span-2">
           
-          <div id="gallery-container" class="bg-white rounded-xl shadow-2xl overflow-hidden mb-8 h-[700px]">
+          <div id="gallery-container" class="bg-white rounded-xl overflow-hidden mb-8 h-[700px]">
               <div class="relative h-full group">
                   
                   <img 
@@ -17,26 +17,26 @@
                   
                   <button 
                       @click="navigateImage(-1)"
-                      class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 text-text opacity-0 group-hover:opacity-100 hover:bg-accent hover:text-white transition-opacity duration-200 shadow-md flex items-center justify-center"
+                      class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 text-text group-hover:opacity-100 hover:bg-accent hover:text-white transition-opacity duration-200 flex items-center justify-center"
                       aria-label="Image précédente"
                   >
-                      <i class="fa-solid fa-chevron-left text-xl"></i>
+                      <Icon icon="ic:round-chevron-left" class="text-3xl" />
                   </button>
                   
                   <button 
                       @click="navigateImage(1)"
-                      class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 text-text opacity-0 group-hover:opacity-100 hover:bg-accent hover:text-white transition-opacity duration-200 shadow-md flex items-center justify-center"
+                      class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/70 text-text group-hover:opacity-100 hover:bg-accent hover:text-white transition-opacity duration-200 flex items-center justify-center"
                       aria-label="Image suivante"
                   >
-                      <i class="fa-solid fa-chevron-right text-xl"></i>
+                      <Icon icon="ic:round-chevron-right" class="text-3xl" />
                   </button>
 
                   <button 
                       @click="toggleFavorite"
-                      :class="['absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg', isFavorite ? 'bg-accent text-white' : 'bg-white/90 hover:bg-accent hover:text-white']"
+                      :class="['absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200', isFavorite ? 'bg-accent text-white' : 'bg-white/90 hover:bg-accent hover:text-white']"
                       :aria-label="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
                   >
-                      <i :class="['fa-solid text-xl', isFavorite ? 'fa-heart' : 'fa-regular fa-heart']"></i>
+                      <Icon :icon="isFavorite ? 'line-md:heart-filled' : 'line-md:heart'" class="text-xl" />
                   </button>
                   
                   <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-text/60 to-transparent p-6">
@@ -48,7 +48,7 @@
                               @click="currentImage = url"
                               :class="[
                                   'w-20 h-20 bg-white/20 backdrop-blur-sm rounded-lg border-2 flex-shrink-0 cursor-pointer transition-all duration-200',
-                                  url === currentImage ? 'border-accent shadow-md' : 'border-white/50 hover:border-accent'
+                                  url === currentImage ? 'border-accent' : 'border-white/50 hover:border-accent'
                               ]"
                           >
                             <img :src="url" :alt="`Vue ${index + 1}`" class="w-full h-full object-cover rounded-md"/>
@@ -57,7 +57,23 @@
                   </div>
               </div>
           </div>
-          <div id="description-section" class="bg-white rounded-xl shadow-lg p-8 mb-8">
+          
+          <h1 class="text-4xl sm:text-5xl font-extrabold text-text mb-4 tracking-tight">{{ item.titre }}</h1>
+          
+          <div class="flex items-center gap-4 mb-8 pb-4 border-b border-gray-200">
+              <span 
+                  :class="['text-sm font-bold uppercase tracking-wider px-3 py-1 rounded-full', item.type_vente === 'ENCHERE' ? 'bg-accent/10 text-accent' : 'bg-text/10 text-text']"
+              >
+                  {{ item.type_vente === 'ENCHERE' ? 'Enchères en cours' : 'Vente immédiate' }}
+              </span>
+              <span class="text-sm font-semibold text-text/70">
+                  Statut : <span :class="{'text-accent': item.statut === 'PUBLIE', 'text-text/50': item.statut !== 'PUBLIE'}">{{ item.statut }}</span>
+              </span>
+              <span class="text-sm font-semibold text-text/70">
+                  Catégorie : {{ item.categorie_nom }}
+              </span>
+          </div>
+          <div id="description-section" class="bg-white rounded-xl p-8 mb-8">
               <h2 class="text-3xl font-extrabold text-text mb-6">Description & Authenticité</h2>
               <div class="border-t border-accent/20 pt-6">
                   <p class="text-lg leading-relaxed text-text/80 mb-6">{{ item.description }}</p>
@@ -71,7 +87,7 @@
               </div>
           </div>
 
-          <div id="technical-details" class="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <div id="technical-details" class="bg-white rounded-xl p-8 mb-8">
               <h2 class="text-3xl font-extrabold text-text mb-6">Détails Techniques</h2>
               <div class="border-t border-accent/20 pt-6">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -108,28 +124,23 @@
               </div>
           </div>
 
-          <div id="vendor-section" class="bg-white rounded-xl shadow-lg p-8">
+          <div id="vendor-section" class="bg-white rounded-xl p-8">
               <h2 class="text-3xl font-extrabold text-text mb-6">Vendeur</h2>
               <div class="border-t border-accent/20 pt-6">
                   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                      <div class="flex items-center gap-5">
+                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                           <div class="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                              <i class="fa-solid fa-user text-3xl text-accent"></i>
+                              <Icon icon="mdi:user-circle" class="text-3xl text-accent" />
                           </div>
                           <div>
-                              <div class="text-2xl font-bold text-text mb-2">
+                              <div class="text-2xl font-bold text-text mb-1">
                                   {{ item.vendeur_type === 'PARTICULIER' ? item.vendeur_prenom + ' M.' : item.vendeur_nom }}
                               </div>
-                              <div class="flex items-center gap-3 mb-3">
-                                  <div class="flex items-center gap-1 text-accent">
-                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                                  </div>
-                                  <span class="text-text/70 font-semibold">5.0 (127 avis)</span>
-                              </div>
+                    
                               <div class="text-text/60">Vendeur {{ item.vendeur_type === 'PARTICULIER' ? 'Particulier' : 'Professionnel' }}</div>
                           </div>
                       </div>
-                      <button class="bg-text text-white px-8 py-3 rounded-lg font-bold hover:bg-text/90 transition-all duration-200 shadow-md w-full sm:w-auto">
+                      <button class="bg-text text-white px-8 py-3 rounded-lg font-bold hover:bg-text/90 transition-all duration-200 w-full sm:w-auto">
                           Contacter
                       </button>
                   </div>
@@ -153,15 +164,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; 
+import { ref, onMounted, computed } from 'vue'; 
 import AuctionBox from '../components/AuctionBox.vue'; 
+import { Icon } from '@iconify/vue'; 
 
 // Données de l'utilisateur et de l'objet (Simulées)
 const currentUserId = ref('u12345'); 
 const hasPaymentMethod = ref(true); 
 const isFavorite = ref(false); 
-
-// Variable pour suivre l'image actuellement affichée (Initialisée ci-dessous)
 const currentImage = ref(''); 
 
 const item = ref({
@@ -173,7 +183,7 @@ const item = ref({
     vendeur_type: 'PARTICULIER', 
     categorie_nom: 'Objets d\'art & tableaux', 
     type_vente: 'ENCHERE', 
-    statut: 'PUBLIE', 
+    statut: 'PUBLIE', // OBJETS.statut
     
     // Détails techniques
     poids_kg: 3.2,
@@ -200,6 +210,30 @@ function toggleFavorite() {
     isFavorite.value = !isFavorite.value;
 }
 
+// Logique pour trouver l'index de l'image actuelle
+const currentImageIndex = computed(() => {
+  return item.value.photos_urls.findIndex(url => url === currentImage.value);
+});
+
+// FONCTION DE NAVIGATION (pour les flèches)
+function navigateImage(direction) { // direction: +1 pour suivant, -1 pour précédent
+    const urls = item.value.photos_urls;
+    const currentIndex = currentImageIndex.value;
+    
+    if (urls.length === 0) return;
+
+    let newIndex = currentIndex + direction;
+
+    // Gestion du bouclage
+    if (newIndex >= urls.length) {
+        newIndex = 0; // Retour à la première
+    } else if (newIndex < 0) {
+        newIndex = urls.length - 1; // Aller à la dernière
+    }
+
+    currentImage.value = urls[newIndex];
+}
+
 // Initialise l'image principale au chargement du composant
 onMounted(() => {
     if (item.value.photos_urls.length > 0) {
@@ -209,8 +243,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Le style est géré principalement par Tailwind CSS dans le template */
-.accent-accent {
-    accent-color: var(--color-accent, #C5A059); 
-}
 </style>

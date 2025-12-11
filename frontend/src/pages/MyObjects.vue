@@ -34,7 +34,6 @@
           v-for="item in filteredObjects" 
           :key="item.id"
           :item="item"
-          @toggle-favorite="handleToggleFavorite"
         />
       </div>
     </div>
@@ -45,10 +44,12 @@
 import { ref, computed, onMounted } from 'vue';
 import PublicLayout from '../layouts/PublicLayout.vue';
 import FavoriteCard from '../components/cards/FavoriteCard.vue';
+import { useFavoritesStore } from '../stores/favoritesStore';
 
 const activeTab = ref('favoris');
 const loading = ref(true);
 const utilisateurId = ref(localStorage.getItem('userId'));
+const favoritesStore = useFavoritesStore();
 
 const tabs = [
   { id: 'favoris', label: 'Favoris' },
@@ -67,7 +68,24 @@ const objets = ref({
 });
 
 const filteredObjects = computed(() => {
-  return objets.value[activeTab.value] || [];
+  const tabName = activeTab.value;
+  let items = objets.value[tabName] || [];
+  
+  if (tabName === 'favoris') {
+    // Recalculer les favoris en fonction du store
+    items = items.filter(item => favoritesStore.isFavorite(item.id));
+    
+    // Ajouter les nouveaux favoris depuis les autres onglets
+    for (const tab of ['propositions', 'encheres', 'achats', 'pertes']) {
+      for (const item of objets.value[tab]) {
+        if (favoritesStore.isFavorite(item.id) && !items.find(f => f.id === item.id)) {
+          items.push(item);
+        }
+      }
+    }
+  }
+  
+  return items;
 });
 
 onMounted(async () => {
@@ -77,31 +95,28 @@ onMounted(async () => {
   }
 
   try {
-    // Récupérer favoris
+    await favoritesStore.loadFavorites(utilisateurId.value);
+
     const favResponse = await fetch(`http://localhost:3000/api/favorites/${utilisateurId.value}`);
     if (favResponse.ok) {
       objets.value.favoris = await favResponse.json();
     }
 
-    // Récupérer propositions d'achat rapide
     const propResponse = await fetch(`http://localhost:3000/api/offres/${utilisateurId.value}`);
     if (propResponse.ok) {
       objets.value.propositions = await propResponse.json();
     }
 
-    // Récupérer enchères
-    const enchResponse = await fetch(`http://localhost:3000/api/encheres/${utilisateur_id.value}`);
+    const enchResponse = await fetch(`http://localhost:3000/api/encheres/${utilisateurId.value}`);
     if (enchResponse.ok) {
       objets.value.encheres = await enchResponse.json();
     }
 
-    // Récupérer achats
     const achatsResponse = await fetch(`http://localhost:3000/api/achats/${utilisateurId.value}`);
     if (achatsResponse.ok) {
       objets.value.achats = await achatsResponse.json();
     }
 
-    // Récupérer pertes (enchères perdues)
     const pertesResponse = await fetch(`http://localhost:3000/api/encheres-perdues/${utilisateurId.value}`);
     if (pertesResponse.ok) {
       objets.value.pertes = await pertesResponse.json();
@@ -112,8 +127,4 @@ onMounted(async () => {
     loading.value = false;
   }
 });
-
-const handleToggleFavorite = (data) => {
-  console.log('Favori togglé:', data);
-};
 </script>
