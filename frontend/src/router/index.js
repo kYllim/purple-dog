@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../stores/authStore'; // Fixed import path
+import { useAuthStore } from '../stores/authStore'; 
 
 import Home from '../pages/Home.vue';
 import ContactPage from '../pages/ContactPage.vue';
@@ -30,7 +30,7 @@ const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/contact', name: 'Contact', component: ContactPage },
 
-  // Routes d'authentification
+
   { path: '/connexion', name: 'Login', component: Login },
   { path: '/login', redirect: '/connexion' },
 
@@ -159,31 +159,31 @@ const router = createRouter({
   routes,
 });
 
-// Middleware de navigation pour la protection des routes
+
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
-  // Initialiser l'état d'authentification depuis le localStorage
+
   authStore.initAuth();
 
-  // Vérifier si la route nécessite une authentification
+
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      // Rediriger vers la page de connexion
+
       next({ name: 'Login', query: { redirect: to.fullPath } });
     } else if (to.meta.requiresRole) {
-      // Vérifier le rôle de l'utilisateur
+
       if (authStore.userRole === to.meta.requiresRole) {
         next();
       } else {
-        // Rôle incorrect, rediriger vers la page d'accueil
+  
         next({ name: 'Home' });
       }
     } else {
       next();
     }
   } else {
-    // Route publique
+
     next();
   }
 });

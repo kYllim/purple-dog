@@ -2,23 +2,21 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
-/**
- * Middleware pour vérifier le token JWT et authentifier l'utilisateur
- */
-const authenticateToken = (req, res, next) => {
-    // Récupérer le token depuis le header Authorization
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
 
+
+const authenticateToken = (req, res, next) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; 
     if (!token) {
         return res.status(401).json({ error: 'Token manquant. Authentification requise.' });
     }
 
     try {
-        // Vérifier et décoder le token
+    
         const decoded = jwt.verify(token, SECRET_KEY);
         
-        // Ajouter les informations de l'utilisateur à la requête
+  
         req.user = {
             id: decoded.id,
             role: decoded.role
@@ -33,4 +31,29 @@ const authenticateToken = (req, res, next) => {
     }
 };
 
-module.exports = { authenticateToken };
+
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+   
+        req.user = null;
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+        next();
+    } catch (error) {
+  
+        req.user = null;
+        next();
+    }
+};
+
+module.exports = { authenticateToken, optionalAuth };

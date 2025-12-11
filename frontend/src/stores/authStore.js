@@ -22,15 +22,14 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await authService.login(credentials);
 
-                // Backend returns { token, role } but not email.
-                // We use credentials.email to display it in the UI.
+            
                 const userData = {
                     userId: response.userId,
                     role: response.role,
                     email: credentials.email
                 };
 
-                // Sauvegarder le token et les infos utilisateur complètes
+              
                 authService.saveAuthData(response.token, userData);
 
                 this.token = response.token;
@@ -47,7 +46,7 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await authService.registerIndividual(data);
 
-                // Sauvegarder le token et les infos utilisateur
+   
                 authService.saveAuthData(response.token, {
                     userId: response.userId,
                     role: 'PARTICULIER',
@@ -67,7 +66,7 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await authService.registerPro(data);
 
-                // Sauvegarder le token et les infos utilisateur
+  
                 authService.saveAuthData(response.token, {
                     userId: response.userId,
                     role: 'PRO',
@@ -90,7 +89,7 @@ export const useAuthStore = defineStore('auth', {
             this.isAuthenticated = false;
         },
 
-        // Initialiser le store depuis le localStorage
+
         initAuth() {
             this.user = authService.getUser();
             this.token = authService.getToken();

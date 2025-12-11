@@ -1,17 +1,16 @@
 const nodemailer = require('nodemailer');
 
-// Configuration du transporteur email
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: process.env.SMTP_PORT || 587,
-  secure: false, // true for 465, false for other ports
+  secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
 
-// Email de vérification d'email
 const sendVerificationEmail = async (email, token) => {
   const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
 
@@ -284,8 +283,121 @@ const sendAuctionWinEmail = async (to, objectTitle, amount) => {
   console.log(`Corps: Félicitations ! Vous avez remporté l'objet "${objectTitle}" pour ${amount}€. Le paiement a été traité.`);
 };
 
+// Email d'avis utilisateur
+const sendFeedbackEmail = async (note, commentaire, auteurInfo) => {
+  const adminEmail = process.env.SMTP_USER; // Email qui reçoit les feedbacks
+  
+  const mailOptions = {
+    from: `"Purple Dog Feedback" <${process.env.SMTP_USER}>`,
+    to: adminEmail,
+    subject: `Nouvel avis Purple Dog - ${note}/10 étoiles`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #F1F5F9; 
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 40px auto; 
+            background: white; 
+            border-radius: 12px; 
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          .header { 
+            background: #0F172A; 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+          }
+          .header h1 { 
+            margin: 0; 
+            font-size: 24px; 
+            font-weight: bold;
+          }
+          .header .gold { 
+            color: #C5A059; 
+          }
+          .content { 
+            padding: 30px; 
+          }
+          .stars {
+            font-size: 28px;
+            color: #C5A059;
+            text-align: center;
+            margin: 20px 0;
+          }
+          .comment-box {
+            background: #F8FAFC;
+            border-left: 4px solid #C5A059;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-style: italic;
+          }
+          .footer { 
+            text-align: center; 
+            padding: 20px; 
+            background: #F8FAFC;
+            color: #94A3B8; 
+            font-size: 12px; 
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>PURPLE<span class="gold">DOG</span></h1>
+            <p style="margin: 10px 0 0 0;">Nouvel avis utilisateur</p>
+          </div>
+          <div class="content">
+            <h2 style="color: #0F172A; margin-top: 0;">Note reçue</h2>
+            <div class="stars">${'⭐'.repeat(note)}</div>
+            <p style="text-align: center; color: #64748B; font-size: 18px; font-weight: bold;">
+              ${note}/10 étoiles
+            </p>
+            
+            ${commentaire ? `
+              <h3 style="color: #0F172A; margin-top: 30px;">Commentaire</h3>
+              <div class="comment-box">
+                "${commentaire}"
+              </div>
+            ` : '<p style="color: #94A3B8; text-align: center;"><em>Aucun commentaire</em></p>'}
+            
+            <p style="color: #64748B; font-size: 14px; margin-top: 30px;">
+              <strong>Utilisateur:</strong> ${auteurInfo || 'Non authentifié'}
+            </p>
+            <p style="color: #94A3B8; font-size: 12px;">
+              Reçu le ${new Date().toLocaleString('fr-FR')}
+            </p>
+          </div>
+          <div class="footer">
+            © 2025 Purple Dog - Système de feedback
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Email de feedback envoyé');
+  } catch (error) {
+    console.error('Erreur envoi email de feedback:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
-  sendAuctionWinEmail
+  sendAuctionWinEmail,
+  sendFeedbackEmail
 };
