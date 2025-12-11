@@ -61,7 +61,7 @@ const heroData = ref({
 });
 
 const carouselData = ref({
-  title: 'ENCHÈRES À LA UNE',
+  title: 'OBJETS À LA UNE',
   images: [
     {
       src: imgObjet1,
