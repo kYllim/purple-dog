@@ -326,4 +326,155 @@ exports.resetPassword = async (req, res) => {
         console.error(e);
         res.status(500).json({ error: 'Erreur serveur' });
     }
+
+};
+
+// Récupérer le profil de l'utilisateur connecté
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        // Récupérer les informations de base de l'utilisateur
+        const userResult = await pool.query(
+            'SELECT id, email, role, adresse, ville, code_postal, pays FROM UTILISATEURS WHERE id = $1',
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        const user = userResult.rows[0];
+        let profileData = {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            adresse: user.adresse,
+            ville: user.ville,
+            code_postal: user.code_postal,
+            pays: user.pays
+        };
+
+        // Récupérer les détails spécifiques selon le rôle
+        if (userRole === 'PARTICULIER') {
+            const detailsResult = await pool.query(
+                'SELECT prenom, nom, age, photo_profil_url FROM DETAILS_PARTICULIER WHERE utilisateur_id = $1',
+                [userId]
+            );
+
+            if (detailsResult.rows.length > 0) {
+                const details = detailsResult.rows[0];
+                profileData = {
+                    ...profileData,
+                    prenom: details.prenom,
+                    nom: details.nom,
+                    age: details.age,
+                    photo_profil_url: details.photo_profil_url
+                };
+            }
+        } else if (userRole === 'PRO') {
+            const detailsResult = await pool.query(
+                'SELECT nom_entreprise, siret, kbis_url, site_web, specialites FROM DETAILS_PRO WHERE utilisateur_id = $1',
+                [userId]
+            );
+
+            if (detailsResult.rows.length > 0) {
+                const details = detailsResult.rows[0];
+                profileData = {
+                    ...profileData,
+                    nom_entreprise: details.nom_entreprise,
+                    siret: details.siret,
+                    kbis_url: details.kbis_url,
+                    site_web: details.site_web,
+                    specialites: details.specialites
+                };
+            }
+        }
+
+        res.json(profileData);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Mettre à jour le profil de l'utilisateur connecté
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.role;
+        const { 
+            email, adresse, ville, code_postal, pays, 
+            prenom, nom, photo_profil_url,
+            nom_entreprise, siret, kbis_url, site_web, specialites
+        } = req.body;
+
+        const client = await pool.connect();
+
+        try {
+            await client.query('BEGIN');
+
+            // Vérifier si l'email est déjà utilisé par un autre utilisateur
+            if (email) {
+                const emailCheck = await client.query(
+                    'SELECT id FROM UTILISATEURS WHERE email = $1 AND id != $2',
+                    [email, userId]
+                );
+
+                if (emailCheck.rows.length > 0) {
+                    await client.query('ROLLBACK');
+                    return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+                }
+            }
+
+            // Mettre à jour les informations de base
+            await client.query(
+                `UPDATE UTILISATEURS 
+                 SET email = COALESCE($1, email),
+                     adresse = COALESCE($2, adresse),
+                     ville = COALESCE($3, ville),
+                     code_postal = COALESCE($4, code_postal),
+                     pays = COALESCE($5, pays),
+                     mis_a_jour_le = CURRENT_TIMESTAMP
+                 WHERE id = $6`,
+                [email, adresse, ville, code_postal, pays, userId]
+            );
+
+            // Mettre à jour les détails spécifiques selon le rôle
+            if (userRole === 'PARTICULIER') {
+                await client.query(
+                    `UPDATE DETAILS_PARTICULIER 
+                     SET prenom = COALESCE($1, prenom),
+                         nom = COALESCE($2, nom),
+                         photo_profil_url = COALESCE($3, photo_profil_url)
+                     WHERE utilisateur_id = $4`,
+                    [prenom, nom, photo_profil_url, userId]
+                );
+            } else if (userRole === 'PRO') {
+                await client.query(
+                    `UPDATE DETAILS_PRO 
+                     SET nom_entreprise = COALESCE($1, nom_entreprise),
+                         siret = COALESCE($2, siret),
+                         kbis_url = COALESCE($3, kbis_url),
+                         site_web = COALESCE($4, site_web),
+                         specialites = COALESCE($5, specialites)
+                     WHERE utilisateur_id = $6`,
+                    [nom_entreprise, siret, kbis_url, site_web, specialites, userId]
+                );
+            }
+
+            await client.query('COMMIT');
+
+            res.json({ message: 'Profil mis à jour avec succès' });
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
 };

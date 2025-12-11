@@ -1,27 +1,36 @@
 const jwt = require('jsonwebtoken');
 
-const CLE_SECRETE = process.env.JWT_SECRET || 'supersecretkey';
+const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
-const authMiddleware = (req, res, next) => {
+/**
+ * Middleware pour vérifier le token JWT et authentifier l'utilisateur
+ */
+const authenticateToken = (req, res, next) => {
+    // Récupérer le token depuis le header Authorization
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
+
+    if (!token) {
+        return res.status(401).json({ error: 'Token manquant. Authentification requise.' });
+    }
+
     try {
-        const enteteAuth = req.headers.authorization;
-        if (!enteteAuth) {
-            return res.status(401).json({ erreur: 'Token manquant' });
-        }
-
-        const token = enteteAuth.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ erreur: 'Format du token invalide' });
-        }
-
-        const decode = jwt.verify(token, CLE_SECRETE);
-        req.utilisateur = decode;
-
+        // Vérifier et décoder le token
+        const decoded = jwt.verify(token, SECRET_KEY);
+        
+        // Ajouter les informations de l'utilisateur à la requête
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+        
         next();
-    } catch (erreur) {
-        console.error('Erreur authentification:', erreur.message);
-        return res.status(401).json({ erreur: 'Token invalide ou expiré' });
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expiré' });
+        }
+        return res.status(403).json({ error: 'Token invalide' });
     }
 };
 
-module.exports = authMiddleware;
+module.exports = { authenticateToken };

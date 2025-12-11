@@ -66,22 +66,49 @@
           </router-link>
 
           <!-- User Profile & Logout -->
-          <div class="flex items-center space-x-4 border-l pl-6 border-gray-200">
-            <router-link to="/profile/edit" class="flex items-center space-x-2 group">
-               <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-colors duration-300">
-                  <UserIcon class="w-5 h-5" />
-               </div>
-               <span class="text-sm font-bold text-text group-hover:text-accent transition-colors duration-300 max-w-[150px] truncate">
-                 {{ authStore.user?.email || 'Mon Compte' }}
-               </span>
-            </router-link>
+          <div class="flex items-center gap-4">
+            <!-- Menu profil avec dropdown -->
+            <div class="relative">
+              <button
+                @click="isProfileOpen = !isProfileOpen"
+                class="flex items-center gap-2 text-sm font-medium text-text hover:text-accent transition-colors duration-300"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+                <span class="max-w-[150px] truncate">{{ authStore.user?.email || 'Mon Compte' }}</span>
+              </button>
 
+              <div
+                v-if="isProfileOpen"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+              >
+                <router-link
+                  :to="authStore.isPro ? '/pro/profil' : '/particulier/profil'"
+                  class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                  @click="isProfileOpen = false"
+                >
+                  Mon profil
+                </router-link>
+                <router-link
+                  :to="authStore.isPro ? '/pro/messages' : '/particulier/messages'"
+                  class="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                  @click="isProfileOpen = false"
+                >
+                  Mes messages
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Icône déconnexion -->
             <button 
               @click="handleLogout" 
-              class="text-text hover:text-red-500 transition-colors duration-300"
+              class="p-2 text-text hover:text-accent transition-colors duration-300"
               title="Se déconnecter"
             >
-              <ArrowRightOnRectangleIcon class="w-6 h-6" />
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </button>
           </div>
         </template>
@@ -98,17 +125,33 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import { useRouter } from 'vue-router';
-import { UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline';
-
-// Future enhancement: Add scroll listener to change opacity
 
 const authStore = useAuthStore();
 const router = useRouter();
+const isProfileOpen = ref(false);
 
 const handleLogout = () => {
+  isProfileOpen.value = false;
   authStore.logout();
   router.push('/');
 }
+
+// Fermer le menu au clic en dehors
+const handleClickOutside = (e) => {
+  const menu = document.querySelector('.relative');
+  if (menu && !menu.contains(e.target)) {
+    isProfileOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
