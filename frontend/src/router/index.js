@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/authStore'; // Fixed import path
 
 import Home from '../pages/Home.vue';
+import ContactPage from '../pages/ContactPage.vue';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 import RegisterProfessionnel from '../pages/RegisterProfessionnel.vue';
@@ -24,6 +25,7 @@ import MyAuctions from '../pages/MyAuctions.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
+  { path: '/contact', name: 'Contact', component: ContactPage },
 
   // Routes d'authentification
   { path: '/connexion', name: 'Login', component: Login },
