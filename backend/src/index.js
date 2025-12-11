@@ -3,22 +3,27 @@ const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const objectsRoutes = require('./routes/objectsRoutes');
+
+// const objectsRoutes = require('./routes/objectsRoutes'); // Supprimé car fusionné
 const objetsRoutes = require('./routes/objetsRoutes');
 const { startCronJobs } = require('./services/cronService');
 const sseService = require('./services/sseService');
 
 
 const app = express();
+const path = require('path'); // Nécessaire pour le static
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
+// Servir les images uploadées
+app.use('/uploads', express.static('uploads'));
+
 app.get('/events', sseService.subscribe);
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
-app.use('/objects', objectsRoutes);
+// app.use('/objects', objectsRoutes); // Route fusionnée
 app.use('/objets', objetsRoutes);
 
 

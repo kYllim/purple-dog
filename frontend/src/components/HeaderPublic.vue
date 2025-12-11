@@ -35,10 +35,10 @@
             <router-link to="/particulier/mes-objets" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
               Mes objets
             </router-link>
-            <router-link to="/favorites" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+            <router-link to="/catalogue" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
               Catalogue
             </router-link>
-            <router-link to="/auctions" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+            <router-link to="/favorites" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
                Mes favoris
             </router-link>
             <router-link to="/mes-encheres" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
