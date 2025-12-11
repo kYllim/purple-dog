@@ -1,5 +1,6 @@
 <template>
     <div class="bg-white rounded-xl p-8">
+        
         <div v-if="item.type_vente === 'ENCHERE'" id="auction-mode">
             
             <div class="mb-6">
@@ -15,7 +16,7 @@
                  :class="['bg-accent/5 rounded-lg p-5 border mb-6', isSeller ? 'border-text/20' : 'border-accent/20']"
             >
                 <div class="flex items-start gap-3">
-                    <i class="fa-solid fa-info-circle text-accent text-xl mt-1"></i>
+                    <Icon icon="mdi:alert-circle-outline" class="text-accent text-xl mt-1" />
                     <div class="text-sm text-text leading-relaxed">
                         <span v-if="isSeller" class="font-bold">Erreur : Vous êtes le vendeur de cet objet. L'auto-enchère est interdite.</span>
                         <span v-else-if="!hasPaymentMethod" class="font-bold">Action Requise :</span> Vous devez configurer votre compte Stripe pour participer aux enchères.
@@ -26,6 +27,7 @@
             <div :class="{'opacity-50 pointer-events-none': isSeller || !hasPaymentMethod}">
                 <div class="mb-6">
                     <div class="text-sm font-bold text-text mb-3">PALIERS RAPIDES (Min. {{ formatPrice(minNextBid) }})</div>
+                    
                     <div class="flex gap-3 mb-4">
                         <button v-for="step in quickSteps" :key="step"
                             @click="setBidAmount(step)"
@@ -72,11 +74,35 @@
         <div v-else-if="item.type_vente === 'INSTANTANE'" id="buyout-mode">
             
             <div class="mb-8">
-                <div class="text-sm font-semibold text-text/60 mb-2">PRIX D'ACHAT IMMÉDIAT</div>
+                <div class="text-sm font-semibold text-text/60 mb-2">PRIX DEMANDÉ</div>
                 <div class="text-5xl font-extrabold text-accent mb-6">{{ formatPrice(item.prix_achat_immediat) }}</div>
             </div>
 
+            <div class="mb-6 border-t border-b border-gray-200 py-4 text-sm">
+                <div class="flex justify-between mb-2">
+                    <span class="text-text/80">Prix de l'objet :</span>
+                    <span class="font-medium text-text">{{ formatPrice(item.prix_achat_immediat) }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-text/80">Commission plateforme (3%) :</span> 
+                    <span class="font-medium text-text">{{ formatPrice(commissionAcheteur) }}</span>
+                </div>
+                <div class="flex justify-between font-bold mt-3 border-t border-accent/20 pt-3">
+                    <span class="text-text">Montant total estimé (hors livraison) :</span>
+                    <span class="text-accent">{{ formatPrice(montantTotalEstime) }}</span>
+                </div>
+            </div>
+            
+            <div class="bg-accent/5 rounded-lg p-3 mb-6 border border-accent/20">
+                <p class="text-xs text-text font-semibold flex items-center">
+                    <Icon icon="mdi:alert-circle-outline" class="text-accent text-lg mr-2" />
+                    L'acheteur dispose de 24h pour "Valider l'achat" après avoir remporté l'objet.
+                </p>
+            </div>
+
+
             <button 
+                @click="makeQuickPurchase"
                 :disabled="!hasPaymentMethod"
                 class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
             >
@@ -91,7 +117,7 @@
 
             <div class="mt-8 pt-6 border-t border-accent/20">
                 <div class="flex items-start gap-3 text-sm text-text/70">
-                    <i class="fa-solid fa-shield-halved text-accent text-lg"></i>
+                    <Icon icon="mdi:shield-check" class="text-accent text-lg" />
                     <div class="leading-relaxed">
                         Paiement sécurisé via Stripe. Garantie de remboursement si l'objet ne correspond pas à la description.
                     </div>
@@ -99,33 +125,59 @@
             </div>
         </div>
         
+        <div class="bg-white rounded-xl p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <Icon icon="mdi:truck-fast" class="text-accent text-2xl" />
+                    <div>
+                        <div class="font-bold text-text">Livraison assurée</div>
+                        <div class="text-sm text-text/60">Estimation : 3-5 jours</div>
+                    </div>
+                </div>
+                <div class="font-bold text-accent">Gratuit</div>
+            </div>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <Icon icon="mdi:undo" class="text-accent text-2xl" />
+                    <div>
+                        <div class="font-bold text-text">Retour accepté</div>
+                        <div class="text-sm text-text/60">Sous 14 jours</div>
+                    </div>
+                </div>
+                <Icon icon="mdi:check-circle" class="text-accent text-xl" />
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
+import { Icon } from '@iconify/vue'; 
 
 const props = defineProps({
     item: { type: Object, required: true },
     currentUserId: String, 
-    hasPaymentMethod: Boolean, // Statut Stripe
-    initialPrice: { type: Number, default: 0 }, // Le prix affiché au chargement (Enchère actuelle)
-    auctionEndsIn: { type: String, default: 'Date inconnue' },
+    hasPaymentMethod: Boolean, 
+    initialPrice: { type: Number, default: 0 }, 
+    auctionEndsIn: { type: String, default: 'Date inconnue' }, 
 });
 
-// --- État Local Simulé (Pour la réactivité de l'enchère) ---
-const currentPrice = ref(props.initialPrice);
-const nextBid = ref(0);
+// --- État Local ---
+const currentPrice = ref(props.initialPrice); 
+const nextBid = ref(0); 
 const isAutoBid = ref(false);
 
-// --- Propriétés Calculées ---
+// --- Logique Métier et Calculs (Basés sur l'ERD/CdC) ---
+
 const isSeller = computed(() => props.item.vendeur_id === props.currentUserId);
-const minBidStep = 50; // Simulation du pas minimum (à remplacer par la logique réelle de CdC)
-const minNextBid = computed(() => currentPrice.value + minBidStep);
+
+// Simuler la récupération du pas d'enchère minimum (à remplacer par la logique réelle)
+const minBidStep = 50; 
+const minNextBid = computed(() => currentPrice.value + minBidStep); 
 
 const quickSteps = computed(() => {
-    // Calcul des paliers rapides (utilisés dans le template)
-    return [minBidStep, minBidStep * 2, minBidStep * 5];
+    // Les paliers rapides que nous affichons dans les boutons (50, 100, 250)
+    return [50, 100, 250]; 
 });
 
 // Historique simulé (Doit venir de ENCHERES_OFFRES)
@@ -135,6 +187,19 @@ const offers = ref([
     { name: 'Sophie R.', amount: 12100, isHighest: false },
     { name: 'Marc P.', amount: 12000, isHighest: false },
 ]);
+
+// Logique de Commission pour Vente Rapide (CdC: 3% commission acheteur)
+const COMMISSION_TAUX_ACHETEUR = 0.03; 
+
+const commissionAcheteur = computed(() => {
+    // Utilise le prix_achat_immediat pour le calcul en mode INSTANTANE
+    return props.item.prix_achat_immediat * COMMISSION_TAUX_ACHETEUR;
+});
+
+const montantTotalEstime = computed(() => {
+    // Prix de l'objet + Commission acheteur (hors frais de livraison)
+    return props.item.prix_achat_immediat + commissionAcheteur.value;
+});
 
 // --- Fonctions d'Action ---
 function formatPrice(value) {
@@ -153,14 +218,16 @@ function setBidAmount(step) {
 function placeBid() {
     if (nextBid.value >= minNextBid.value) {
         console.log(`Nouvelle offre placée: ${nextBid.value}. Auto-bid: ${isAutoBid.value}`);
-        // Logique API pour enregistrer l'offre (ENCHERES_OFFRES)
-        // Simulation de la mise à jour :
         currentPrice.value = nextBid.value;
         nextBid.value = currentPrice.value + minBidStep;
-        // La nouvelle offre devrait être ajoutée à offers.value (via WebSockets/SSE)
     } else {
         alert(`Le montant minimum est ${formatPrice(minNextBid.value)}.`);
     }
+}
+
+function makeQuickPurchase() {
+    // Logique pour lancer la commande COMMANDES
+    alert("Achat immédiat lancé. Redirection vers le paiement.");
 }
 
 // Initialisation du champ de saisie
