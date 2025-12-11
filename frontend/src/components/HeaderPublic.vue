@@ -42,8 +42,8 @@
             <router-link to="/favorites" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
               Mes favoris
             </router-link>
-            <router-link to="/auctions" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
-               Enchères
+            <router-link to="/mes-encheres" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
+               Mes Enchères
             </router-link>
             <router-link to="/history" class="text-sm font-bold uppercase tracking-widest text-text hover:text-accent transition-colors duration-300">
                Historique
