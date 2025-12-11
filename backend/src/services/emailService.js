@@ -126,7 +126,14 @@ const sendPasswordResetEmail = async (email, token) => {
   }
 };
 
+// Email de confirmation de victoire aux enchères
+const sendAuctionWinEmail = async (to, objectTitle, amount) => {
+  console.log(`[EMAIL MOCK] Pour: ${to} | Sujet: Vous avez gagné l'enchère !`);
+  console.log(`Corps: Félicitations ! Vous avez remporté l'objet "${objectTitle}" pour ${amount}€. Le paiement a été traité.`);
+};
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
+  sendAuctionWinEmail
 };

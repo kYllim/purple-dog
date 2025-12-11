@@ -18,6 +18,7 @@ import Favorite from '../components/cards/FavoriteCard.vue';
 import History from '../components/cards/HistoryCard.vue';
 import ObjectDetailsPage from '../pages/ObjectDetailsPage.vue';
 import MyObjectsPage from '../pages/particulier/MyObjectsPage.vue';
+import MyAuctions from '../pages/MyAuctions.vue';
 
 
 const routes = [
@@ -56,8 +57,15 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'PRO' }
   },
 
+  {
+    path: '/mes-encheres',
+    name: 'MyAuctions',
+    component: MyAuctions,
+    meta: { requiresAuth: true, requiresRole: 'PRO' }
+  },
 
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
+
+
 
   {
     path: "/particulier/vendre",
@@ -71,7 +79,9 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'PARTICULIER' }
   },
 
-  { path: '/details', name: 'Details', component: ObjectDetailsPage },
+  { path: '/objets/:id', name: 'ObjectDetails', component: ObjectDetailsPage },
+  { path: '/encheres/:id', name: 'AuctionDetails', component: ObjectDetailsPage },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: Error404 },
 ];
 
 const router = createRouter({

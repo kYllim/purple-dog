@@ -35,4 +35,13 @@ api.interceptors.response.use(
   }
 );
 
+// Methods for auctions and offers
+api.placeBid = (id, amount, maxAuto) => {
+  return api.post(`/objets/${id}/encherir`, { montant: amount, montant_max_auto: maxAuto });
+};
+
+api.makeOffer = (id, amount) => {
+  return api.post(`/objets/${id}/offres`, { montant: amount });
+};
+
 export default api;
