@@ -98,9 +98,7 @@ const creerObjet = async (req, res) => {
       urlsPhotos = [...urlsPhotos, ...bodyPhotos];
     }
 
-    if (urlsPhotos.length < 2) {
-      throw new Error("Il faut au moins 2 photos pour valider l'annonce.");
-    }
+    // Constraint removed per user request: if (urlsPhotos.length < 2) ...
 
     const {
       titre,

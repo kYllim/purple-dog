@@ -43,7 +43,7 @@
     <!-- Photos -->
     <div>
       <label class="block font-sans text-text mb-4">
-        Photos du produit (min. 2)
+        Photos du produit (optionnel)
       </label>
 
       <div class="grid grid-cols-3 sm:grid-cols-5 gap-4">
