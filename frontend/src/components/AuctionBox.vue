@@ -1,33 +1,38 @@
 <template>
     <div class="bg-white rounded-xl p-8">
-        
         <div v-if="item.type_vente === 'ENCHERE'" id="auction-mode">
             
             <div class="mb-6">
                 <div class="text-sm font-semibold text-text/60 mb-2">ENCHÈRE ACTUELLE</div>
                 <div class="text-5xl font-extrabold text-accent mb-4">{{ formatPrice(currentPrice) }}</div>
                 
-                <div class="bg-accent/10 rounded-lg px-4 py-3 border border-accent/30">
-                    <div class="text-accent font-bold">Fin de l'enchère : {{ auctionEndsIn }}</div>
+                <div class="bg-accent/10 rounded-lg px-4 py-3 border border-accent/30 relative overflow-hidden">
+                    <div class="text-accent font-bold">Fin de l'enchère : {{ timerString }}</div>
+                    
+                     <Transition name="fade">
+                        <div v-if="isWinning" class="absolute top-0 right-0 m-2 px-3 py-1 rounded-sm font-bold text-[10px] uppercase tracking-widest shadow-lg backdrop-blur-md bg-accent text-white border border-white/20">
+                            Vous menez
+                        </div>
+                     </Transition>
                 </div>
             </div>
 
-            <div v-if="isSeller || !hasPaymentMethod" 
-                 :class="['bg-accent/5 rounded-lg p-5 border mb-6', isSeller ? 'border-text/20' : 'border-accent/20']"
-            >
-                <div class="flex items-start gap-3">
-                    <Icon icon="mdi:alert-circle-outline" class="text-accent text-xl mt-1" />
-                    <div class="text-sm text-text leading-relaxed">
-                        <span v-if="isSeller" class="font-bold">Erreur : Vous êtes le vendeur de cet objet. L'auto-enchère est interdite.</span>
-                        <span v-else-if="!hasPaymentMethod" class="font-bold">Action Requise :</span> Vous devez configurer votre compte Stripe pour participer aux enchères.
+            <div v-if="userError" class="bg-red-50 text-red-600 p-4 rounded-lg mb-6 border border-red-200">
+                {{ userError }}
+            </div>
+
+            <Transition name="toast">
+                <div v-if="successMessage" class="fixed bottom-10 right-10 bg-white/95 backdrop-blur-xl text-text px-8 py-5 rounded-sm shadow-2xl border-l-4 border-accent flex items-center gap-4 z-[9999] min-w-[300px]">
+                    <div>
+                        <div class="font-serif font-bold text-lg text-accent uppercase tracking-wider">Succès</div>
+                        <div class="font-medium text-sm">{{ successMessage }}</div>
                     </div>
                 </div>
-            </div>
-            
-            <div :class="{'opacity-50 pointer-events-none': isSeller || !hasPaymentMethod}">
+            </Transition>
+
+            <div :class="{'opacity-50 pointer-events-none': !canBid}">
                 <div class="mb-6">
-                    <div class="text-sm font-bold text-text mb-3">PALIERS RAPIDES (Min. {{ formatPrice(minNextBid) }})</div>
-                    
+                    <div class="text-sm font-bold text-text mb-3">PALIERS RAPIDES</div>
                     <div class="flex gap-3 mb-4">
                         <button v-for="step in quickSteps" :key="step"
                             @click="setBidAmount(step)"
@@ -39,7 +44,7 @@
                     
                     <input 
                         type="number" 
-                        :placeholder="`Montant personnalisé (Min: ${formatPrice(minNextBid)})`" 
+                        :placeholder="`Montant (Min: ${formatPrice(minNextBid)})`" 
                         v-model.number="nextBid"
                         class="w-full px-4 py-3 rounded-lg border-2 border-accent/30 focus:border-accent outline-none font-semibold text-lg mb-4"
                     >
@@ -50,215 +55,184 @@
                     </label>
                 </div>
 
+                <div v-if="!authStore.isAuthenticated" class="mb-4 text-center">
+                    <p class="text-sm text-text/70 mb-2">Connectez-vous pour enchérir</p>
+                    <router-link to="/connexion" class="text-accent font-bold underline">Se connecter</router-link>
+                </div>
+
+                <div v-else-if="!authStore.isPro" class="mb-4 text-center bg-red-50 p-4 rounded-lg border border-red-200">
+                     <p class="text-sm text-red-600 font-bold">Réservé aux Professionnels</p>
+                     <p class="text-xs text-red-500 mt-1">Les particuliers ne peuvent que vendre.</p>
+                </div>
+
                 <button 
+                    v-else
                     @click="placeBid"
-                    :disabled="nextBid < minNextBid"
+                    :disabled="nextBid < minNextBid || isLoading"
                     class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
                 >
-                    Placer mon offre
+                    {{ isLoading ? 'Envoi...' : 'Placer mon offre' }}
                 </button>
-            </div>
-
-            <div>
-                <div class="text-sm font-bold text-text mb-4">HISTORIQUE DES OFFRES</div>
-                <div v-if="offers.length > 0" class="space-y-3">
-                    <div v-for="(offer, index) in offers" :key="index" class="flex items-center justify-between py-2 border-b" :class="{'border-accent/10': index < offers.length - 1}">
-                        <div class="font-semibold text-text">{{ offer.name }}</div>
-                        <div class="font-bold" :class="{'text-accent': offer.isHighest, 'text-text': !offer.isHighest}">{{ formatPrice(offer.amount) }}</div>
-                    </div>
-                </div>
-                <div v-else class="text-center py-4">
-                    <p class="text-text/60">Aucune enchère pour le moment</p>
-                </div>
             </div>
         </div>
 
-
         <div v-else-if="item.type_vente === 'INSTANTANE'" id="buyout-mode">
-            
-            <div class="mb-8">
-                <div class="text-sm font-semibold text-text/60 mb-2">PRIX DEMANDÉ</div>
+             <div class="mb-8">
+                <div class="text-sm font-semibold text-text/60 mb-2">PRIX D'ACHAT IMMÉDIAT</div>
                 <div class="text-5xl font-extrabold text-accent mb-6">{{ formatPrice(item.prix_achat_immediat) }}</div>
-            </div>
-
-            <div class="mb-6 border-t border-b border-gray-200 py-4 text-sm">
-                <div class="flex justify-between mb-2">
-                    <span class="text-text/80">Prix de l'objet :</span>
-                    <span class="font-medium text-text">{{ formatPrice(item.prix_achat_immediat) }}</span>
-                </div>
-                <div class="flex justify-between mb-2">
-                    <span class="text-text/80">Commission plateforme (3%) :</span> 
-                    <span class="font-medium text-text">{{ formatPrice(commissionAcheteur) }}</span>
-                </div>
-                <div class="flex justify-between font-bold mt-3 border-t border-accent/20 pt-3">
-                    <span class="text-text">Montant total estimé (hors livraison) :</span>
-                    <span class="text-accent">{{ formatPrice(montantTotalEstime) }}</span>
-                </div>
-            </div>
-            
-            <div class="bg-accent/5 rounded-lg p-3 mb-6 border border-accent/20">
-                <p class="text-xs text-text font-semibold flex items-center">
-                    <Icon icon="mdi:alert-circle-outline" class="text-accent text-lg mr-2" />
-                    L'acheteur dispose de 24h pour "Valider l'achat" après avoir remporté l'objet.
-                </p>
-            </div>
-
-
-            <button 
-                @click="makeQuickPurchase"
-                :disabled="!hasPaymentMethod"
-                class="w-full bg-accent text-white py-4 rounded-lg font-extrabold text-lg hover:bg-text transition-all duration-200 mb-6 disabled:bg-gray-400"
-            >
-                Acheter immédiatement
-            </button>
-
-            <div class="text-center">
-                <a href="#" class="text-accent font-semibold underline hover:text-text transition-colors duration-200">
-                    Faire une offre de prix
-                </a>
-            </div>
-
-            <div class="mt-8 pt-6 border-t border-accent/20">
-                <div class="flex items-start gap-3 text-sm text-text/70">
-                    <Icon icon="mdi:shield-check" class="text-accent text-lg" />
-                    <div class="leading-relaxed">
-                        Paiement sécurisé via Stripe. Garantie de remboursement si l'objet ne correspond pas à la description.
-                    </div>
-                </div>
             </div>
         </div>
         
-        <div class="bg-white rounded-xl p-6 mt-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <Icon icon="mdi:truck-fast" class="text-accent text-2xl" />
-                    <div>
-                        <div class="font-bold text-text">Livraison assurée</div>
-                        <div class="text-sm text-text/60">Estimation : 3-5 jours</div>
-                    </div>
-                </div>
-                <div class="font-bold text-accent">Gratuit</div>
-            </div>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <Icon icon="mdi:undo" class="text-accent text-2xl" />
-                    <div>
-                        <div class="font-bold text-text">Retour accepté</div>
-                        <div class="text-sm text-text/60">Sous 14 jours</div>
-                    </div>
-                </div>
-                <Icon icon="mdi:check-circle" class="text-accent text-xl" />
-            </div>
-        </div>
+
     </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import { Icon } from '@iconify/vue'; 
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useAuthStore } from '../stores/authStore';
+import api from '../services/api';
 
 const props = defineProps({
     item: { type: Object, required: true },
-    currentUserId: String, 
-    hasPaymentMethod: Boolean, 
 });
 
-// --- État Local ---
-const currentPrice = ref(0); 
-const nextBid = ref(0); 
+const authStore = useAuthStore();
+
+const currentPrice = ref(props.item.enchere_prix_actuel ? parseFloat(props.item.enchere_prix_actuel) : (props.item.prix_depart || 0));
+const currentLeaderId = ref(props.item.leader_id);
+const endDate = ref(props.item.enchere_fin ? new Date(props.item.enchere_fin) : null);
+const nextBid = ref(0);
 const isAutoBid = ref(false);
-const auctionEndsIn = ref('Chargement...');
-const offers = ref([]);
+const isLoading = ref(false);
+const userError = ref('');
+const successMessage = ref('');
+const timerString = ref('--j --h --m --s');
 
-// --- Logique Métier et Calculs ---
+const isSeller = computed(() => authStore.user?.userId === props.item.vendeur_id);
+const isWinning = computed(() => {
+    if (!authStore.isAuthenticated || !authStore.user?.userId || !currentLeaderId.value) return false;
+    return String(authStore.user.userId) === String(currentLeaderId.value);
+});
+const hasPaymentMethod = computed(() => true); 
+const canBid = computed(() => authStore.isAuthenticated && authStore.isPro && !isSeller.value && hasPaymentMethod.value && !isAuctionEnded.value);
 
-const isSeller = computed(() => {
-    if (!props.currentUserId || !props.item) return false;
-    return props.item.vendeur_id === props.currentUserId;
+const minBidStep = computed(() => {
+    if (currentPrice.value < 100) return 10;
+    if (currentPrice.value < 500) return 50;
+    return 100;
 });
 
-const minBidStep = 50; 
-const minNextBid = computed(() => currentPrice.value + minBidStep); 
-
-const quickSteps = computed(() => {
-    return [50, 100, 250]; 
+const minNextBid = computed(() => {
+    if (isWinning.value) return currentPrice.value;
+    return currentPrice.value + minBidStep.value;
 });
 
-// Logique de Commission pour Vente Rapide
-const COMMISSION_TAUX_ACHETEUR = 0.03; 
+const quickSteps = computed(() => [minBidStep.value, minBidStep.value * 2, minBidStep.value * 5]);
 
-const commissionAcheteur = computed(() => {
-    return props.item.prix_achat_immediat * COMMISSION_TAUX_ACHETEUR;
-});
+const isAuctionEnded = computed(() => endDate.value && new Date() > endDate.value);
 
-const montantTotalEstime = computed(() => {
-    return props.item.prix_achat_immediat + commissionAcheteur.value;
-});
+watch(() => props.item, (newVal) => {
+    if (newVal.enchere_prix_actuel) currentPrice.value = parseFloat(newVal.enchere_prix_actuel);
+    if (newVal.enchere_fin) endDate.value = new Date(newVal.enchere_fin);
+    if (newVal.leader_id !== undefined) currentLeaderId.value = newVal.leader_id;
+    updateTimer();
+}, { deep: true });
 
-// --- Fonctions d'Action ---
+watch(minNextBid, (newMin) => {
+    if (nextBid.value === 0) {
+        nextBid.value = newMin;
+    }
+}, { immediate: true });
+
+
 function formatPrice(value) {
-    return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'EUR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(value);
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(value);
 }
 
 function setBidAmount(step) {
     nextBid.value = currentPrice.value + step;
 }
 
-function placeBid() {
-    if (nextBid.value >= minNextBid.value) {
-        console.log(`Nouvelle offre placée: ${nextBid.value}. Auto-bid: ${isAutoBid.value}`);
-        currentPrice.value = nextBid.value;
-        nextBid.value = currentPrice.value + minBidStep;
-    } else {
-        alert(`Le montant minimum est ${formatPrice(minNextBid.value)}.`);
-    }
-}
+async function placeBid() {
+    userError.value = '';
+    successMessage.value = '';
+    isLoading.value = true;
 
-function makeQuickPurchase() {
-    alert("Achat immédiat lancé. Redirection vers le paiement.");
-}
-
-async function loadAuctionData() {
     try {
-        if (props.item.type_vente === 'ENCHERE' && props.item.id) {
-            // Récupérer les enchères pour cet objet
-            const response = await fetch(
-                `http://localhost:3000/api/encheres/${props.item.id}`
-            );
-            
-            if (response.ok) {
-                const data = await response.json();
-                // Les enchères contiendraient les données historiques
-                // Pour l'instant, on initialise avec le prix souhaité
-                currentPrice.value = props.item.prix_souhaite || 0;
-                nextBid.value = currentPrice.value + minBidStep;
-            }
-        } else if (props.item.type_vente === 'INSTANTANE') {
-            currentPrice.value = props.item.prix_achat_immediat || 0;
-        }
+        const response = await api.placeBid(props.item.id, nextBid.value, isAutoBid.value ? nextBid.value : null);
+        successMessage.value = "Offre placée avec succès !";
+        currentPrice.value = response.data.nouveau_prix;
+        currentLeaderId.value = authStore.user.userId;
+        if (response.data.fin) endDate.value = new Date(response.data.fin);
     } catch (err) {
-        console.error('Erreur chargement enchères:', err);
-        currentPrice.value = props.item.prix_souhaite || props.item.prix_achat_immediat || 0;
+        userError.value = err.response?.data?.error || "Une erreur est survenue.";
+    } finally {
+        isLoading.value = false;
     }
 }
 
-watch(() => props.item, (newItem) => {
-    if (newItem) {
-        loadAuctionData();
-        // Initialiser nextBid
-        nextBid.value = currentPrice.value + minBidStep;
+let timerInterval;
+
+function updateTimer() {
+    if (!endDate.value) return;
+    const now = new Date();
+    const diff = endDate.value - now;
+
+    if (diff <= 0) {
+        timerString.value = "Terminé";
+        return;
     }
-}, { immediate: true });
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    timerString.value = `${days}j ${hours}h ${minutes}m ${seconds}s`;
+}
+
+let eventSource;
 
 onMounted(() => {
-    loadAuctionData();
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+
+    eventSource = new EventSource('http://localhost:3000/events');
+    
+    eventSource.addEventListener('bid_update', (event) => {
+        const data = JSON.parse(event.data);
+        if (data.objetId === props.item.id) {
+            currentPrice.value = parseFloat(data.nouveauPrix);
+            if (data.nouvelleFin) endDate.value = new Date(data.nouvelleFin);
+            if (data.encherisseurId) currentLeaderId.value = data.encherisseurId;
+            successMessage.value = "Une nouvelle offre a été placée !";
+            setTimeout(() => successMessage.value = '', 3000);
+        }
+    });
+
+    eventSource.addEventListener('auction_end', (event) => {
+        const data = JSON.parse(event.data);
+        if (data.objetId === props.item.id) {
+            timerString.value = "Terminé";
+        }
+    });
+});
+
+onUnmounted(() => {
+    clearInterval(timerInterval);
+    if (eventSource) eventSource.close();
 });
 </script>
 
 <style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
 </style>

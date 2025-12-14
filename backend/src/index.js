@@ -1,29 +1,43 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const objetRoutes = require('./routes/catalogueRoutes');
+
+const feedbackRoutes = require('./routes/feedbackRoutes');
+
+const objetsRoutes = require('./routes/objetsRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const favorisRoutes = require('./routes/favorisRoutes');
+// ...
+const { startCronJobs } = require('./services/cronService');
+const sseService = require('./services/sseService');
+
 
 const app = express();
+const path = require('path');
 const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Routes
+
+app.use('/uploads', express.static('uploads'));
+
+app.get('/events', sseService.subscribe);
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
+app.use('/', feedbackRoutes);
+app.use('/objets', objetsRoutes);
+app.use('/paiement', paymentRoutes);
+app.use('/favoris', favorisRoutes);
 
-app.use('/api', objetRoutes);
-// Database connection
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
 
-// Health check
+
+const pool = require('./db/index');
+
 app.get('/health', async (req, res) => {
     try {
         const result = await pool.query('SELECT NOW()');
@@ -36,4 +50,5 @@ app.get('/health', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
+    startCronJobs();
 });

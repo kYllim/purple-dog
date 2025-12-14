@@ -8,7 +8,7 @@ const emailService = require('../services/emailService');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
-// Générer un token aléatoire
+
 const generateToken = () => {
     return crypto.randomBytes(32).toString('hex');
 };
@@ -46,6 +46,14 @@ const schemaLogin = z.object({
 
 exports.registerPro = async (req, res) => {
     try {
+        if (req.files) {
+            const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+            if (req.files['kbis']) {
+                req.body.kbis_url = baseUrl + req.files['kbis'][0].filename;
+            }
+            // Si on ajoute d'autres fichiers plus tard
+        }
+
         const d = schemaPro.parse(req.body);
         const { email, password, company_name, siret, kbis_url, site_web, specialites, address, city, zip_code, country } = d;
 
@@ -116,8 +124,13 @@ exports.registerPro = async (req, res) => {
 
 exports.registerIndividual = async (req, res) => {
     try {
+        if (req.file) {
+            const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+            req.body.photo_profil_url = baseUrl + req.file.filename;
+        }
+
         const d = schemaParticulier.parse(req.body);
-        const { email, password, first_name, last_name, age, address, city, zip_code, country } = d;
+        const { email, password, first_name, last_name, age, address, city, zip_code, country, photo_profil_url } = d;
 
         const exist = await pool.query('SELECT id FROM UTILISATEURS WHERE email = $1', [email]);
         if (exist.rows.length > 0) return res.status(400).json({ error: 'Email pris' });
@@ -135,9 +148,9 @@ exports.registerIndividual = async (req, res) => {
             const uid = userRes.rows[0].id;
 
             await client.query(
-                `INSERT INTO DETAILS_PARTICULIER (utilisateur_id, prenom, nom, age)
-                 VALUES ($1, $2, $3, $4)`,
-                [uid, first_name, last_name, age]
+                `INSERT INTO DETAILS_PARTICULIER (utilisateur_id, prenom, nom, age, photo_profil_url)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [uid, first_name, last_name, age, photo_profil_url]
             );
 
             // Générer token de vérification d'email
@@ -184,11 +197,13 @@ exports.login = async (req, res) => {
         if (resDb.rows.length === 0) return res.status(401).json({ error: 'Identifiants invalides' });
 
         const user = resDb.rows[0];
+        if (user.est_bloque) return res.status(403).json({ error: 'Votre compte a été suspendu.' });
+
         const valid = await bcrypt.compare(password, user.mot_de_passe_hash);
         if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
 
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ message: 'Connexion réussie', token, role: user.role, emailVerified: user.email_verifie });
+        res.json({ message: 'Connexion réussie', token, userId: user.id, role: user.role, emailVerified: user.email_verifie });
     } catch (e) {
         if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors });
         console.error(e);
@@ -196,7 +211,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// Vérifier l'email avec le token
+
 exports.verifyEmail = async (req, res) => {
     try {
         const { token } = req.body;
@@ -236,7 +251,7 @@ exports.verifyEmail = async (req, res) => {
     }
 };
 
-// Demander la réinitialisation du mot de passe
+
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -247,7 +262,7 @@ exports.forgotPassword = async (req, res) => {
 
         const result = await pool.query('SELECT * FROM UTILISATEURS WHERE email = $1', [email]);
 
-        // Toujours retourner un succès pour ne pas révéler si l'email existe
+
         if (result.rows.length === 0) {
             return res.json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
         }
@@ -305,15 +320,15 @@ exports.resetPassword = async (req, res) => {
 
         const user = result.rows[0];
 
-        // Vérifier si le token a expiré
+
         if (new Date() > new Date(user.token_reset_password_expire)) {
             return res.status(400).json({ error: 'Token expiré' });
         }
 
-        // Hasher le nouveau mot de passe
+
         const hash = await bcrypt.hash(newPassword, 10);
 
-        // Mettre à jour le mot de passe
+
         await pool.query(
             `UPDATE UTILISATEURS 
              SET mot_de_passe_hash = $1, token_reset_password = NULL, token_reset_password_expire = NULL 
@@ -322,6 +337,157 @@ exports.resetPassword = async (req, res) => {
         );
 
         res.json({ message: 'Mot de passe réinitialisé avec succès' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+
+};
+
+
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        // Récupérer les informations de base de l'utilisateur
+        const userResult = await pool.query(
+            'SELECT id, email, role, adresse, ville, code_postal, pays FROM UTILISATEURS WHERE id = $1',
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        const user = userResult.rows[0];
+        let profileData = {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            adresse: user.adresse,
+            ville: user.ville,
+            code_postal: user.code_postal,
+            pays: user.pays
+        };
+
+
+        if (userRole === 'PARTICULIER') {
+            const detailsResult = await pool.query(
+                'SELECT prenom, nom, age, photo_profil_url FROM DETAILS_PARTICULIER WHERE utilisateur_id = $1',
+                [userId]
+            );
+
+            if (detailsResult.rows.length > 0) {
+                const details = detailsResult.rows[0];
+                profileData = {
+                    ...profileData,
+                    prenom: details.prenom,
+                    nom: details.nom,
+                    age: details.age,
+                    photo_profil_url: details.photo_profil_url
+                };
+            }
+        } else if (userRole === 'PRO') {
+            const detailsResult = await pool.query(
+                'SELECT nom_entreprise, siret, kbis_url, site_web, specialites FROM DETAILS_PRO WHERE utilisateur_id = $1',
+                [userId]
+            );
+
+            if (detailsResult.rows.length > 0) {
+                const details = detailsResult.rows[0];
+                profileData = {
+                    ...profileData,
+                    nom_entreprise: details.nom_entreprise,
+                    siret: details.siret,
+                    kbis_url: details.kbis_url,
+                    site_web: details.site_web,
+                    specialites: details.specialites
+                };
+            }
+        }
+
+        res.json(profileData);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.role;
+        const {
+            email, adresse, ville, code_postal, pays,
+            prenom, nom, photo_profil_url,
+            nom_entreprise, siret, kbis_url, site_web, specialites
+        } = req.body;
+
+        const client = await pool.connect();
+
+        try {
+            await client.query('BEGIN');
+
+            // Vérifier si l'email est déjà utilisé par un autre utilisateur
+            if (email) {
+                const emailCheck = await client.query(
+                    'SELECT id FROM UTILISATEURS WHERE email = $1 AND id != $2',
+                    [email, userId]
+                );
+
+                if (emailCheck.rows.length > 0) {
+                    await client.query('ROLLBACK');
+                    return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+                }
+            }
+
+
+            await client.query(
+                `UPDATE UTILISATEURS 
+                 SET email = COALESCE($1, email),
+                     adresse = COALESCE($2, adresse),
+                     ville = COALESCE($3, ville),
+                     code_postal = COALESCE($4, code_postal),
+                     pays = COALESCE($5, pays),
+                     mis_a_jour_le = CURRENT_TIMESTAMP
+                 WHERE id = $6`,
+                [email, adresse, ville, code_postal, pays, userId]
+            );
+
+
+            if (userRole === 'PARTICULIER') {
+                await client.query(
+                    `UPDATE DETAILS_PARTICULIER 
+                     SET prenom = COALESCE($1, prenom),
+                         nom = COALESCE($2, nom),
+                         photo_profil_url = COALESCE($3, photo_profil_url)
+                     WHERE utilisateur_id = $4`,
+                    [prenom, nom, photo_profil_url, userId]
+                );
+            } else if (userRole === 'PRO') {
+                await client.query(
+                    `UPDATE DETAILS_PRO 
+                     SET nom_entreprise = COALESCE($1, nom_entreprise),
+                         siret = COALESCE($2, siret),
+                         kbis_url = COALESCE($3, kbis_url),
+                         site_web = COALESCE($4, site_web),
+                         specialites = COALESCE($5, specialites)
+                     WHERE utilisateur_id = $6`,
+                    [nom_entreprise, siret, kbis_url, site_web, specialites, userId]
+                );
+            }
+
+            await client.query('COMMIT');
+
+            res.json({ message: 'Profil mis à jour avec succès' });
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
     } catch (e) {
         console.error(e);
         res.status(500).json({ error: 'Erreur serveur' });

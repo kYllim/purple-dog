@@ -477,8 +477,11 @@ const handleStepSubmit = async (formData, { setErrors, setLoading }) => {
     
     console.log('Inscription Professionnel réussie:', response);
     
-    // Redirection vers la page d'accueil
-    router.push('/');
+    // Déconnecter l'utilisateur (il doit d'abord vérifier son email)
+    authStore.logout();
+    
+    // Redirection vers la page EmailSent avec l'email
+    router.push({ name: 'EmailSent', query: { email: formData.email } });
     
   } catch (error) {
     console.error('Erreur inscription:', error);

@@ -43,7 +43,7 @@
     <!-- Photos -->
     <div>
       <label class="block font-sans text-text mb-4">
-        Photos du produit (min. 2)
+        Photos du produit (optionnel)
       </label>
 
       <div class="grid grid-cols-3 sm:grid-cols-5 gap-4">
@@ -79,7 +79,8 @@
 </template>
 
 <script setup>
-import { reactive, watch } from "vue";
+import { reactive, watch, ref, onMounted } from "vue";
+import { objectService } from "../../../services/objectService";
 
 const props = defineProps({
   modelValue: Object
@@ -87,18 +88,19 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "next"]);
 
 const localForm = reactive(JSON.parse(JSON.stringify(props.modelValue)));
+const categories = ref([]);
 
 watch(localForm, () => {
   emit("update:modelValue", localForm);
 }, { deep: true });
 
-const categories = [
-  { id: 1, nom: "Bijoux & montres" },
-  { id: 2, nom: "Meubles anciens" },
-  { id: 3, nom: "Objets d’art" },
-  { id: 4, nom: "Peintures & sculptures" },
-  { id: 5, nom: "Accessoires de luxe" }
-];
+onMounted(async () => {
+  try {
+    categories.value = await objectService.getCategories();
+  } catch (error) {
+    console.error("Erreur chargement catégories:", error);
+  }
+});
 
 const addPhotos = (e) => {
   const files = Array.from(e.target.files);

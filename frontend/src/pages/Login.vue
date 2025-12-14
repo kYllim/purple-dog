@@ -85,6 +85,34 @@
         </template>
       </AuthForm>
     </div>
+
+    <!-- Modale Ban (Style identique à Users.vue) -->
+    <div v-if="showBannedModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
+         
+         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+           <h3 class="text-xl font-serif font-bold text-[#0F172A]">
+             Compte Suspendu
+           </h3>
+           <button @click="showBannedModal = false" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+         </div>
+
+         <div class="p-6 text-center">
+              <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                 <span class="text-3xl">🚫</span>
+              </div>
+              <p class="font-bold text-[#0F172A] text-lg mb-2">Votre accès a été révoqué</p>
+              <p class="text-slate-600 mb-6 text-sm leading-relaxed">
+                 Pour espérer récupérer votre compte, vous devez envoyer une lettre de plate excuse et supplier la pitié du support technique.
+              </p>
+              
+              <a href="#" class="block w-full bg-[#0F172A] text-[#C5A059] py-3 px-4 rounded-lg font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">
+                Écrire au support en pleurant
+              </a>
+         </div>
+
+       </div>
+     </div>
   </div>
 </template>
 
@@ -94,12 +122,14 @@ import { useRouter } from 'vue-router';
 import AuthForm from '../components/AuthForm.vue';
 import BaseInput from '../components/BaseInput.vue';
 import BaseCheckbox from '../components/BaseCheckbox.vue';
+import ModalConfirmation from '../components/common/ModalConfirmation.vue';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 import { useAuthStore } from '@/stores/authStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const showPassword = ref(false);
+const showBannedModal = ref(false);
 
 const initialFormData = {
   email: '',
@@ -129,7 +159,9 @@ const handleLogin = async (formData, { setErrors, setLoading }) => {
     
   } catch (error) {
     console.error('Erreur login:', error);
-    if (error.response?.data?.error) {
+    if (error.response?.status === 403 && error.response.data?.error === 'Votre compte a été suspendu.') {
+      showBannedModal.value = true;
+    } else if (error.response?.data?.error) {
       setErrors({
         email: error.response.data.error
       });

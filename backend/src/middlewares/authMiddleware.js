@@ -1,31 +1,59 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-module.exports = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
+const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
-    if (!authHeader) {
-      return res.status(401).json({ erreur: "Token manquant" });
+
+
+const authenticateToken = (req, res, next) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; 
+    if (!token) {
+        return res.status(401).json({ error: 'Token manquant. Authentification requise.' });
     }
 
-    const token = authHeader.split(" ")[1];
+    try {
+    
+        const decoded = jwt.verify(token, SECRET_KEY);
+        
+  
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+        
+        next();
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expiré' });
+        }
+        return res.status(403).json({ error: 'Token invalide' });
+    }
+};
+
+
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ erreur: "Token invalide" });
+   
+        req.user = null;
+        return next();
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Le controller attend req.utilisateur.id
-    req.utilisateur = {
-      id: decoded.id,
-      role: decoded.role
-    };
-
-    next();
-
-  } catch (error) {
-    console.error("Erreur authMiddleware :", error);
-    return res.status(401).json({ erreur: "Token invalide ou expiré" });
-  }
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+        next();
+    } catch (error) {
+  
+        req.user = null;
+        next();
+    }
 };
+
+module.exports = { authenticateToken, optionalAuth };
